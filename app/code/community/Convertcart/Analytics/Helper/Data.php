@@ -39,9 +39,9 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
         //determine via config if module active & if init to be sent ..
         //testing mode, comment this line later ..
 
-//        $client_id = '05233918'; //fetch dynamically from config later...
-        if(!isset($client_id))
-            return ;
+//        $client_id = '05233918'; //this is test key, fetch dynamically from config later...
+        if(!isset($client_id) or $client_id == '')
+            return;
         else
         	return 1;
 	}
@@ -53,5 +53,27 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
             return ;
         else
         	return $client_id;
+	}
+
+	public function canSyncCatalog(){
+        if(Mage::getStoreConfig('convertcart_options/convercart_config/convercart_catalog') and $this->isEnabled())
+        	return 1;
+        else
+        	return;
+	}
+
+	public function canSyncCustomer(){
+        if(Mage::getStoreConfig('convertcart_options/convercart_config/convercart_customer') and $this->isEnabled())
+        	return 1;
+        else
+        	return;
+	}
+
+	public function canSyncOrder(){
+
+        if(Mage::getStoreConfig('convertcart_options/convercart_config/convercart_order') and $this->isEnabled())
+        	return 1;
+        else
+        	return;
 	}
 }

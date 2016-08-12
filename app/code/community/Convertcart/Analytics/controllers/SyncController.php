@@ -9,6 +9,10 @@ class Convertcart_Analytics_SyncController extends Mage_Core_Controller_Front_Ac
 	}//countAction ends
 
 	public function customerAction(){
+        if(Mage::Helper('convertcart_analytics')->canSyncCustomer() == false){ //dont proceed if not enabled
+            return;
+        }
+
 		$updated_at = '2011-12-11';
 		$limit =10;
 
@@ -22,6 +26,10 @@ class Convertcart_Analytics_SyncController extends Mage_Core_Controller_Front_Ac
 	}//customerAction ends
 
 	public function orderAction(){
+        if(Mage::Helper('convertcart_analytics')->canSyncOrder() == false){ //dont proceed if not enabled
+            return;
+        }
+
 		$updated_at = '2016-07-29';
 		$limit =10;
 
@@ -35,6 +43,10 @@ class Convertcart_Analytics_SyncController extends Mage_Core_Controller_Front_Ac
 	}//orderAction ends	
 
 	public function catalogAction(){
+        if(Mage::Helper('convertcart_analytics')->canSyncCatalog() == false){ //dont proceed if not enabled
+            return;
+        }		
+
 		$updated_at = '2015-07-29';
 		$limit =5;
 		$store_id =3;
