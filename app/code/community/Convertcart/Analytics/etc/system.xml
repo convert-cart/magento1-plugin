@@ -1,0 +1,39 @@
+<config>
+    <tabs>
+        <convertcart translate="label" module="convertcart_analytics">
+            <label>Convert Cart</label>
+            <sort_order>99999</sort_order>
+        </convertcart>
+    </tabs> 
+    <sections>
+        <convertcart_options translate="label" module="convertcart_analytics">
+            <label>Convert Cart Keys</label>
+            <tab>convertcart</tab>
+            <frontend_type>text</frontend_type>
+            <sort_order>1000</sort_order>
+            <show_in_default>1</show_in_default>
+            <show_in_website>1</show_in_website>
+            <show_in_store>1</show_in_store>                    
+            <groups>
+                <convercart_config translate="label">
+                    <label>Convert Cart Keys</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>1</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>                
+				    <fields>
+				        <convercart_configkeys>
+				            <label>Enter Your Client Key</label>
+				            <frontend_type>text</frontend_type>
+				            <sort_order>1</sort_order>
+				            <show_in_default>1</show_in_default>
+				            <show_in_website>1</show_in_website>
+				            <show_in_store>1</show_in_store>                    
+				        </convercart_configkeys>
+				    </fields>                   
+                </convercart_config>
+            </groups>
+        </convertcart_options>
+    </sections>    
+</config>

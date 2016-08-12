@@ -1,0 +1,272 @@
+<config>
+    <modules>
+        <Convertcart_Analytics>
+            <version>1.0.0</version>
+        </Convertcart_Analytics>
+    </modules>
+    <frontend>
+        <routers>
+            <cc_analytics>
+                <use>standard</use>
+                <args>
+                    <module>Convertcart_Analytics</module>
+                    <frontName>cc</frontName>
+                </args>
+            </cc_analytics>
+        </routers>
+    </frontend>
+    <global>
+        <events>
+            <controller_action_layout_render_before>
+                <observers>
+                    <Convertcart_Analytics>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>addBlock</method>
+                    </Convertcart_Analytics>
+
+                    <convertcart_analytics_init>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>cc_init</method>
+                    </convertcart_analytics_init>
+                </observers>
+            </controller_action_layout_render_before>
+
+            <controller_action_layout_generate_blocks_after>
+                <observers>
+                    <convertcart_analytics_homepage_view>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>homepageView</method>
+                    </convertcart_analytics_homepage_view>
+
+                    <convertcart_analytics_cmsView>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>cmsView</method>
+                    </convertcart_analytics_cmsView>
+
+                    <convertcart_analytics_category_view>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>categoryView</method>
+                    </convertcart_analytics_category_view>
+
+                    <convertcart_analytics_product_view>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>productView</method>
+                    </convertcart_analytics_product_view>
+
+                    <convertcart_analytics_cart_view>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>cartView</method>
+                    </convertcart_analytics_cart_view>
+
+                    <convertcart_analytics_checkout_view>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>checkoutView</method>
+                    </convertcart_analytics_checkout_view>
+                  </observers>                    
+            </controller_action_layout_generate_blocks_after>
+
+            <catalogsearch_query_load_after>
+                <observers>
+                    <convertcart_analytics_search_view>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>searchView</method>
+                    </convertcart_analytics_search_view>
+                </observers>          
+            </catalogsearch_query_load_after> 
+
+            <customer_register_success>
+                <observers>
+                    <convertcart_analytics_customer_register>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>customerRegister</method>
+                    </convertcart_analytics_customer_register>
+                </observers>          
+            </customer_register_success>
+
+            <customer_login>
+                <observers>
+                    <convertcart_analytics_customer_login>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>loggedIn</method>
+                    </convertcart_analytics_customer_login>            
+                </observers>
+            </customer_login>
+
+            <customer_logout>
+                <observers>
+                    <convertcart_analytics_customer_logout>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>loggedOut</method>
+                    </convertcart_analytics_customer_logout>            
+                </observers>
+            </customer_logout>          
+
+            <checkout_cart_product_add_after>
+                <observers>
+                    <convertcart_analytics_addtocart>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>addtocart</method>
+                    </convertcart_analytics_addtocart>            
+                </observers>          
+            </checkout_cart_product_add_after>
+
+            <sales_quote_remove_item>
+                <observers>
+                    <convertcart_analytics_removeFromCart>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>removeFromCart</method>
+                    </convertcart_analytics_removeFromCart>            
+                </observers>                    
+            </sales_quote_remove_item>
+
+            <checkout_cart_update_items_after>
+                <observers>
+                    <convertcart_analytics_addtocart>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>updateCart</method>
+                    </convertcart_analytics_addtocart>            
+                </observers>          
+            </checkout_cart_update_items_after>
+
+            <salesrule_validator_process>
+                <observers>
+                    <convertcart_analytics_coupon>
+                      <type>singleton</type>
+                      <class>Convertcart_Analytics_Model_Observer</class>
+                      <method>updateCart</method>
+                  </convertcart_analytics_coupon>            
+                </observers>          
+            </salesrule_validator_process>
+
+            <sales_order_place_after>
+                <observers>
+                    <convertcart_analytics_ordered>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>ordered</method>
+                    </convertcart_analytics_ordered>
+                </observers>  
+            </sales_order_place_after>
+
+            <catalog_block_product_list_collection>
+                <observers>
+                    <convertcart_analytics_modifyCategory>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>modifyCategory</method>
+                    </convertcart_analytics_modifyCategory>
+                </observers>  
+            </catalog_block_product_list_collection>
+
+            <wishlist_add_product>
+                <observers>
+                     <convertcart_analytics_addToWishlist>         
+                          <class>Convertcart_Analytics_Model_Observer</class>
+                          <method>addToWishlist</method>           
+                      </convertcart_analytics_addToWishlist>
+                </observers>
+            </wishlist_add_product>    
+
+            <wishlist_item_delete_after>
+                <observers>
+                    <convertcart_analytics_removeFromWishlist>         
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>removeFromWishlist</method>           
+                    </convertcart_analytics_removeFromWishlist>
+                </observers>
+            </wishlist_item_delete_after>    
+
+            <wishlist_update_item>
+                <observers>
+                    <convertcart_analytics_updateWishlist>         
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>wishlistView</method>           
+                    </convertcart_analytics_updateWishlist>
+                </observers>
+             </wishlist_update_item>    
+
+            <controller_action_layout_generate_blocks_after>
+                <observers>
+                    <convertcart_analytics_wishlist_view>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>wishlistView</method>
+                    </convertcart_analytics_wishlist_view>
+                    
+                    <convertcart_analytics_compare_view>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>compareView</method>
+                    </convertcart_analytics_compare_view>
+                </observers>                    
+            </controller_action_layout_generate_blocks_after>
+
+            <catalog_product_compare_add_product>
+                <observers>
+                    <convertcart_analytics_addToCompare>         
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>addToCompare</method>           
+                    </convertcart_analytics_addToCompare>
+                  </observers>
+            </catalog_product_compare_add_product>    
+
+           <catalog_product_compare_remove_product>
+                <observers>
+                      <convertcart_analytics_removeFromCompare>         
+                          <class>Convertcart_Analytics_Model_Observer</class>
+                            <method>removeFromCompare</method>           
+                      </convertcart_analytics_removeFromCompare>
+                  </observers>
+            </catalog_product_compare_remove_product>  
+        </events>
+
+        <models>
+          <convertcart_analytics>
+              <class>Convertcart_Analytics_Model</class>
+          </convertcart_analytics>
+        </models>
+
+        <helpers>
+          <convertcart_analytics>
+              <class>Convertcart_Analytics_Helper</class>
+          </convertcart_analytics>
+        </helpers>
+    </global>
+
+    <adminhtml>
+        <acl>
+            <resources>
+                <admin>
+                    <children>
+                        <system>
+                            <children>
+                                <config>
+                                    <children>
+                                        <convertcart_options>
+                                            <title>Convert Cart</title>
+                                        </convertcart_options>
+                                    </children>
+                                </config>
+                            </children>
+                        </system>
+                    </children>
+                </admin>
+            </resources>
+        </acl>
+    </adminhtml>
+</config>
