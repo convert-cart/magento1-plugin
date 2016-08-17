@@ -32,48 +32,81 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
 			return 'default';
 	}	
 
-	public function isEnabled()
-	{
-        $client_id = Mage::getStoreConfig('convertcart_options/convercart_config/convercart_configkeys');
-
-        //determine via config if module active & if init to be sent ..
-        //testing mode, comment this line later ..
-
-//        $client_id = '05233918'; //this is test key, fetch dynamically from config later...
-        if(!isset($client_id) or $client_id == '')
-            return;
-        else
+	public function isEnabled(){
+		$this->generateKey();
+        if( $this->getKey() ) {
         	return 1;
+        }
+        else
+        	return;
 	}
 
 	public function getKey()
 	{
         $client_id = Mage::getStoreConfig('convertcart_options/convercart_config/convercart_configkeys');
-        if(!isset($client_id))
+        if(!isset($client_id) or $client_id == '')
             return ;
         else
         	return $client_id;
 	}
 
 	public function canSyncCatalog(){
-        if(Mage::getStoreConfig('convertcart_options/convercart_config/convercart_catalog') and $this->isEnabled())
+        if( Mage::getStoreConfig('convertcart_options/convercart_config/convercart_catalog') )
         	return 1;
-        else
-        	return;
+        else{
+        	$this->accessDenied();
+        }
 	}
 
 	public function canSyncCustomer(){
-        if(Mage::getStoreConfig('convertcart_options/convercart_config/convercart_customer') and $this->isEnabled())
+        if( Mage::getStoreConfig('convertcart_options/convercart_config/convercart_customer') )
         	return 1;
-        else
-        	return;
+        else{
+        	$this->accessDenied();
+        }
 	}
 
 	public function canSyncOrder(){
 
-        if(Mage::getStoreConfig('convertcart_options/convercart_config/convercart_order') and $this->isEnabled())
+        if ( Mage::getStoreConfig('convertcart_options/convercart_config/convercart_order') )
         	return 1;
         else
-        	return;
+        	$this->accessDenied();
+	}
+
+	public function generateKey(){
+		$api_key = Mage::getStoreConfig('convertcart_options/convercart_config/convercart_api');
+		if(!isset($api_key) or $api_key == ''){
+			$api_key = md5(uniqid(rand(), true));
+			Mage::getConfig()->saveConfig('convertcart_options/convercart_config/convercart_api', $api_key, 'default', 0);
+		}
+		return;
+	}
+
+	public function authorize(){
+	    $request = new Zend_Controller_Request_Http();
+		$request_key = $request->getHeader("X-API-Key");
+		//testing , uncomment this later
+		$request_key = Mage::getStoreConfig('convertcart_options/convercart_config/convercart_api');
+		$api_key = Mage::getStoreConfig('convertcart_options/convercart_config/convercart_api');
+
+		//incase api key not yet generated
+		if(!isset($api_key) or $api_key == ''){
+			$this->generateKey();
+        	$this->accessDenied();
+		}
+
+		if($api_key != $request_key){
+        	$this->accessDenied();
+	    }
+	}
+
+	public function accessDenied(){
+	    Mage::app()->getResponse()
+	        ->setHeader('HTTP/1.1','401 Unauthorized')
+	        ->setBody('<h1>401 Unauthorized</h1>')
+	        ->sendResponse();
+	    exit;
+
 	}
 }
