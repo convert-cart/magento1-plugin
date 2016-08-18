@@ -35,7 +35,6 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
 
         if(empty($cc_event_data))
             return;
-        $this->clearData();
 
         return $cc_event_data;
 	}

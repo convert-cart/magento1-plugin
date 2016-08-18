@@ -23,6 +23,7 @@ class Convertcart_Analytics_Model_Observer
             return;
         }
 
+        $cc->clearData();
         foreach($cc_data as $single_event){
             $cc_event_data = Mage::app()->getLayout()->createBlock('core/template')
                               ->setEventType(json_encode($single_event['event_type']))
@@ -120,17 +121,46 @@ class Convertcart_Analytics_Model_Observer
             return;
         }
 
-        $product= Mage::getModel('catalog/product_api')->info($params['id']);
+        $product = Mage::registry('current_product');
+
+        $product_data = array(
+            'id' => $product->getId(),
+            'url' => $product->getProductUrl(),
+            'name' => $product->getName(),
+            'price' => $product->getPrice(),
+            'description' => strip_tags($product->getShortDescription()),
+            'sku' => $product->getSku()
+        );
+
+        $product_data['stock'] = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product)->getQty();
+
         $categories = Mage::getModel('catalog/category')->getCollection()
-        ->addAttributeToSelect('name')
-        ->addFieldToFilter('entity_id', array('in'=>$product['category_ids']));    
+                    ->addAttributeToSelect('name')
+                    ->addFieldToFilter('entity_id', array('in'=>$product->getCategoryIds()));
+
+        $product_data['category'] = array();
+        //$product_data['category_ids'] = $product->getCategoryIds();
+        $c=0;
         foreach($categories as $category)
         {
-            $product['categories'][] = $category->getName();            
+            $product_data['category'][$c]['name'] = $category->getName();
+            $product_data['category'][$c]['id'] = $category->getId();            
+            $c++;            
         }
 
+        $product_data['type'] = $product->getTypeId();
+
+        if($product_data['type'] == "configurable"){
+            $product_data['product_type'] = "parent";
+            $child_products = Mage::getModel('catalog/product_type_configurable')
+                                ->getChildrenIds($product->getId());            
+            $product_data['child_ids'] = $child_products[0];
+        }
+        else
+            $product_data['product_type'] = "simple";
+
         $cc_view['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("productView");
-        $cc_view['event_data'] = $product;
+        $cc_view['event_data'] = $product_data;
         $cc_view['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertmeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');         
@@ -247,16 +277,16 @@ class Convertcart_Analytics_Model_Observer
 
         foreach ($cartItems as $item) {
             $cart_item = array();
-            $cart_item['product_name'] = str_replace("'","",$item->getName());
-            $cart_item['product_price'] = $item->getPrice();
-            $cart_item['product_quantity'] = $item->getQty();
-            $cart_item['product_id'] = $item->getProductId();
+            $cart_item['name'] = str_replace("'","",$item->getName());
+            $cart_item['price'] = $item->getPrice();
+            $cart_item['quantity'] = $item->getQty();
+            $cart_item['id'] = $item->getProductId();
             $cart_item['sku'] = $item->getSku();      
             $cart[] = $cart_item;
         }
 
         $cc_view['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("cartView");
-        $cc_view['event_data']['current_cart']['items'] = $cart;
+        $cc_view['event_data']['current_cart'] = $cart;
         $cc_view['event_data']['current_cart']['coupon_code'] = $quote->getCouponCode();
         $cc_view['event_data']['current_cart']['total'] = $quote->getGrandTotal();
         $cc_view['event_data']['current_cart']['base_total'] = $quote->getBaseGrandTotal();
@@ -294,17 +324,19 @@ class Convertcart_Analytics_Model_Observer
 
         foreach ($cartItems as $item) {
             $cart_item = array();
-            $cart_item['product_name'] = str_replace("'","",$item->getName());
-            $cart_item['product_price'] = $item->getPrice();
-            $cart_item['product_quantity'] = $item->getQty();
-            $cart_item['product_id'] = $item->getProductId();
+            $cart_item['name'] = str_replace("'","",$item->getName());
+            $cart_item['price'] = $item->getPrice();
+            $cart_item['quantity'] = $item->getQty();
+            $cart_item['id'] = $item->getProductId();
             $cart_item['sku'] = $item->getSku();      
             $cart[] = $cart_item;
         }
 
         $cc_view['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("checkoutView");
-        $cc_view['event_data']['current_cart']['items'] = $cart;
+        $cc_view['event_data']['current_cart'] = $cart;
         $cc_view['event_data']['current_cart']['coupon_code'] = $quote->getCouponCode();
+        $cc_view['event_data']['current_cart']['total'] = $quote->getGrandTotal();
+        $cc_view['event_data']['current_cart']['base_total'] = $quote->getBaseGrandTotal();        
         $cc_view['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertmeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');         
@@ -313,10 +345,19 @@ class Convertcart_Analytics_Model_Observer
 
     public function loggedIn($observer){
 		$customer = $observer->getCustomer();
-		$customer_data['customer_email'] = $customer->getEmail();
-		$customer_data['customer_first_name'] = $customer->getFirstname();
-		$customer_data['customer_last_name'] = $customer->getLastname();
-		$customer_data['customer_id'] = $customer->getId();
+		$customer_data['email'] = $customer->getEmail();
+		$customer_data['first_name'] = $customer->getFirstname();
+		$customer_data['last_name'] = $customer->getLastname();
+		$customer_data['id'] = $customer->getId();
+
+        $customerTotals = Mage::getResourceModel('sales/sale_collection')
+             ->setOrderStateFilter(Mage_Sales_Model_Order::STATE_CANCELED, true)
+             ->setCustomerFilter($customer)
+             ->load()
+             ->getTotals();
+
+        $customer_data['lifetime_sales'] =  $customerTotals->getLifetime();
+        $customer_data['num_orders'] =  $customerTotals->getNumOrders();
 
         $cc_data['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("loggedIn");
         $cc_data['event_data'] = $customer_data;
@@ -328,10 +369,10 @@ class Convertcart_Analytics_Model_Observer
 
     public function loggedOut($observer){
 		$customer = $observer->getCustomer();
-		$customer_data['customer_email'] = $customer->getEmail();
-		$customer_data['customer_first_name'] = $customer->getFirstname();
-		$customer_data['customer_last_name'] = $customer->getLastname();
-		$customer_data['customer_id'] = $customer->getId();
+		$customer_data['email'] = $customer->getEmail();
+		$customer_data['first_name'] = $customer->getFirstname();
+		$customer_data['last_name'] = $customer->getLastname();
+		$customer_data['id'] = $customer->getId();
 
         $cc_data['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("loggedOut");
         $cc_data['event_data'] = $customer_data;
@@ -343,10 +384,10 @@ class Convertcart_Analytics_Model_Observer
 
     public function customerRegister($observer){
         $customer = $observer->getCustomer();
-		$customer_data['customer_email'] = $customer->getEmail();
-		$customer_data['customer_first_name'] = $customer->getFirstname();
-		$customer_data['customer_last_name'] = $customer->getLastname();
-		$customer_data['customer_id'] = $customer->getId();
+		$customer_data['email'] = $customer->getEmail();
+		$customer_data['first_name'] = $customer->getFirstname();
+		$customer_data['last_name'] = $customer->getLastname();
+		$customer_data['id'] = $customer->getId();
 
         $cc_data['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("customerRegister");
         $cc_data['event_data'] = $customer_data;
@@ -358,10 +399,10 @@ class Convertcart_Analytics_Model_Observer
 
     public function addtocart($observer){
         $product = $observer->getProduct();
-    	$cart['product_name'] = str_replace("'","",$product->getName());
-    	$cart['product_price'] = $product->getFinalPrice();
-    	$cart['product_quantity'] = $product->getQty();
-		$cart['product_id'] = $product->getId();
+    	$cart['name'] = str_replace("'","",$product->getName());
+    	$cart['price'] = $product->getFinalPrice();
+    	$cart['quantity'] = $product->getQty();
+		$cart['id'] = $product->getId();
 		$cart['sku'] = $product->getSku();		
 
         $cc_data['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("addtocart");
@@ -375,10 +416,10 @@ class Convertcart_Analytics_Model_Observer
 
     public function removeFromCart($observer){
         $product = $observer->getQuoteItem()->getProduct();
-    	$cart['product_name'] = str_replace("'","",$product->getName());
-    	$cart['product_price'] = $product->getFinalPrice();
-    	$cart['product_quantity'] = $product->getQty();
-		$cart['product_id'] = $product->getId();
+    	$cart['name'] = str_replace("'","",$product->getName());
+    	$cart['price'] = $product->getFinalPrice();
+    	$cart['quantity'] = $product->getQty();
+		$cart['id'] = $product->getId();
 		$cart['sku'] = $product->getSku();		
 
         $cc_data['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("removeFromCart");
@@ -396,16 +437,16 @@ class Convertcart_Analytics_Model_Observer
 
         foreach ($cartItems as $item) {
             $cart_item = array();
-            $cart_item['product_name'] = str_replace("'","",$item->getName());
-            $cart_item['product_price'] = $item->getPrice();
-            $cart_item['product_quantity'] = $item->getQty();
-            $cart_item['product_id'] = $item->getProductId();
+            $cart_item['name'] = str_replace("'","",$item->getName());
+            $cart_item['price'] = $item->getPrice();
+            $cart_item['quantity'] = $item->getQty();
+            $cart_item['id'] = $item->getProductId();
             $cart_item['sku'] = $item->getSku();      
             $cart[] = $cart_item;
         }
 
         $cc_data['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("updateCart");
-        $cc_data['event_data']['current_cart']['items'] = $cart;
+        $cc_data['event_data']['current_cart'] = $cart;
         $cc_data['event_data']['current_cart']['coupon_code'] = $quote->getCouponCode();
         $cc_data['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertmeta();
 
@@ -416,10 +457,10 @@ class Convertcart_Analytics_Model_Observer
     public function ordered($observer){
 		$order = $observer->getOrder();
 		foreach($order->getAllVisibleItems() as $item){
-	    	$order_item['product_name'] = str_replace("'","",$item->getName());
-	    	$order_item['product_price'] = $item->getPrice();
-	    	$order_item['product_quantity'] = $item->getQtyOrdered();
-			$order_item['product_id'] = $item->getId();
+	    	$order_item['name'] = str_replace("'","",$item->getName());
+	    	$order_item['price'] = $item->getPrice();
+	    	$order_item['quantity'] = $item->getQtyOrdered();
+			$order_item['id'] = $item->getId();
 			$order_item['sku'] = $item->getSku();
 			$order_items[] = $order_item;
 		}
@@ -446,8 +487,8 @@ class Convertcart_Analytics_Model_Observer
     public function addToWishlist($observer){
         $product  = $observer->getProduct();
 
-        $wishlist['product_name'] = str_replace("'","",$product->getName());
-        $wishlist['product_id'] = $product->getId();
+        $wishlist['name'] = str_replace("'","",$product->getName());
+        $wishlist['id'] = $product->getId();
         $wishlist['sku'] = $product->getSku();      
 
         $cc_data['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("addToWishlist");
@@ -477,13 +518,13 @@ class Convertcart_Analytics_Model_Observer
     $wishlist_items = Mage::helper('wishlist')->getWishlistItemCollection();
     foreach ($wishlist_items as $wishlist_item) {
         $product = $wishlist_item->getProduct();
-        $wlist['product_name'] = str_replace("'","",$product->getName());
-        $wlist['product_id'] = $product->getId();
+        $wlist['name'] = str_replace("'","",$product->getName());
+        $wlist['id'] = $product->getId();
         $wlist['sku'] = $product->getSku();
         $wishlist[] = $wlist;
     }
         $cc_data['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("wishlistView");
-        $cc_data['event_data'] = $wishlist;
+        $cc_data['event_data']['current_wishlist'] = $wishlist;
         $cc_data['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertmeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');  
@@ -496,14 +537,14 @@ class Convertcart_Analytics_Model_Observer
         $wishlist_items = Mage::helper('wishlist')->getWishlistItemCollection();
         foreach ($wishlist_items as $wishlist_item) {
             $product = $wishlist_item->getProduct();
-            $wlist['product_name'] = str_replace("'","",$product->getName());
-            $wlist['product_id'] = $product->getId();
+            $wlist['name'] = str_replace("'","",$product->getName());
+            $wlist['id'] = $product->getId();
             $wlist['sku'] = $product->getSku();
             $wishlist[] = $wlist;
         }
 
         $cc_data['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("removeFromWishlist");
-        $cc_data['event_data']['current_wishlist'][] = $wishlist;
+        $cc_data['event_data']['current_wishlist'] = $wishlist;
         $cc_data['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertmeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');  
@@ -513,8 +554,8 @@ class Convertcart_Analytics_Model_Observer
     public function addToCompare($observer){
         $product  = $observer->getProduct();
 
-        $compare['product_name'] = str_replace("'","",$product->getName());
-        $compare['product_id'] = $product->getId();
+        $compare['name'] = str_replace("'","",$product->getName());
+        $compare['id'] = $product->getId();
         $compare['sku'] = $product->getSku();      
 
         $cc_data['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("addToCompare");
@@ -527,7 +568,7 @@ class Convertcart_Analytics_Model_Observer
 
     public function removeFromCompare($observer){
         $product  = $observer->getProduct();
-        $compare['product_id'] = $product->getProductId();
+        $compare['id'] = $product->getProductId();
 
         $cc_data['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("removeFromCompare");
         $cc_data['event_data'] = $compare;
@@ -559,14 +600,14 @@ class Convertcart_Analytics_Model_Observer
 
         foreach($compare_collection as $product){
             $compare_item = array();
-            $compare_item['product_sku'] = $product->getSku();
-            $compare_item['product_id'] = $product->getId();
-            $compare_item['product_name'] = $product->getName();            
+            $compare_item['sku'] = $product->getSku();
+            $compare_item['id'] = $product->getId();
+            $compare_item['name'] = $product->getName();            
             $compare_items[] = $compare_item;
         }
 
         $cc_data['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("compareView");
-        $cc_data['event_data']['items'] = $compare_items;
+        $cc_data['event_data']['current_compare'] = $compare_items;
         $cc_data['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertmeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');  
