@@ -9,22 +9,6 @@ class Convertcart_Analytics_Model_Sync extends Mage_Core_Model_Session_Abstract
 		$count_data['customers'] = $this->getCustomerCount();
 		$count_data['orders'] = $this->getOrderCount();
 
-		$attribute_sets = Mage::getModel('catalog/product_attribute_set_api')->items();
-
-		$count_data['attribute_sets']['total_attribute_sets'] = count($attribute_sets);
-		$count_data['attribute_sets']['data'] = $attribute_sets;
-		$count_data['attributes'] = array();
-		$attribute_set_count = 0;
-
-		foreach($attribute_sets as $attribute_set){
-			$attribute_set_count++;
-			$items = Mage::getModel('catalog/product_attribute_api')->items($attribute_set['set_id']);
-			$count_data['attributes'][$attribute_set_count]['total_attributes'] = count($items);
-			$count_data['attributes'][$attribute_set_count]['attribute_set_id'] = $attribute_set['set_id'];
-			$count_data['attributes'][$attribute_set_count]['name'] = $attribute_set['name'];			
-			$count_data['attributes'][$attribute_set_count]['data'] = $items;
-		}//foreach attribute_set ends
-
 		return $count_data;
 	}
 
@@ -134,6 +118,26 @@ class Convertcart_Analytics_Model_Sync extends Mage_Core_Model_Session_Abstract
 		}
 		return $order_ids;
 	}//getOrders function ends
+
+	public function getAttributes(){
+		$attribute_sets = Mage::getModel('catalog/product_attribute_set_api')->items();
+
+		$attributes_data['attribute_sets']['total_attribute_sets'] = count($attribute_sets);
+		$attributes_data['attribute_sets']['data'] = $attribute_sets;
+		$attributes_data['attributes'] = array();
+		$attribute_set_count = 0;
+
+		foreach($attribute_sets as $attribute_set){
+			$attribute_set_count++;
+			$items = Mage::getModel('catalog/product_attribute_api')->items($attribute_set['set_id']);
+			$attributes_data['attributes'][$attribute_set_count]['total_attributes'] = count($items);
+			$attributes_data['attributes'][$attribute_set_count]['attribute_set_id'] = $attribute_set['set_id'];
+			$attributes_data['attributes'][$attribute_set_count]['name'] = $attribute_set['name'];			
+			$attributes_data['attributes'][$attribute_set_count]['data'] = $items;
+		}//foreach attribute_set ends
+
+		return $attributes_data;
+	}
 
 	public function getProducts($updated_at,$limit = 5,$store_id = null){
 		$updated_at = strtotime($updated_at);
