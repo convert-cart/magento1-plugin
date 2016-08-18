@@ -82,4 +82,25 @@ class Convertcart_Analytics_SyncController extends Mage_Core_Controller_Front_Ac
 		$this->getResponse()->setHeader('Content-type', 'application/json');
 		$this->getResponse()->setBody(json_encode($product_data));
 	}//catalogAction ends
+
+	public function categoryAction(){
+        if(Mage::Helper('convertcart_analytics')->canSyncCatalog() == false){ //dont proceed if not enabled
+            return;
+        }
+
+		$storeid=1;
+
+		$rootid     = Mage::app()->getStore($storeid)->getRootCategoryId();
+		$categories = Mage::getModel('catalog/category')
+		    ->getCollection()
+		    ->addAttributeToSelect('name')
+		    ->addFieldToFilter('path', array('like'=> "1/$rootid/%"));
+
+		$category_data = array();
+		foreach ($categories as $category){
+			$category_data[] = Mage::getModel('catalog/category_api')->info($category->getId());
+		}
+		$this->getResponse()->setHeader('Content-type', 'application/json');
+		$this->getResponse()->setBody(json_encode($category_data));
+	}
 }
