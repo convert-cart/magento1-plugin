@@ -3,7 +3,7 @@ class Convertcart_Analytics_Model_Session extends Mage_Core_Model_Session_Abstra
 {
     public function __construct()
     {
-        if(!session_id()) {
+        if (!session_id()) {
             Mage::throwException("No session id. Blocking rather than instantiate object early.");
         }        
         $this->init('convertcart_analytics');

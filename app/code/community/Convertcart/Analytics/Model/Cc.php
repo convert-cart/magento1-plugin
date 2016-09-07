@@ -16,74 +16,77 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         if(Mage::Helper('convertcart_analytics')->isEnabled() == false) //dont proceed if not enabled
             return;
 
-        $client_id = Mage::Helper('convertcart_analytics')->getKey();
-        if(!isset($client_id))
+        $clientId = Mage::Helper('convertcart_analytics')->getKey();
+        if(!isset($clientId))
             return ;
 
         $script = Mage::app()->getLayout()->createBlock('core/template')
-                  ->setClientId($client_id)
+                  ->setClientId($clientId)
                   ->setTemplate('convertcart/init.phtml');
         return $script;
     }
 
-    public function getData(){
+    public function getData()
+    {
         if(Mage::Helper('convertcart_analytics')->isEnabled() == false) //dont proceed if not enabled
             return;
 
-        $session        = $this->_getSession();
-        $cc_event_data = $session->getCc_Events();
+        $session = $this->_getSession();
+        $eventData = $session->getCc_Events();
 
-        if(empty($cc_event_data))
+        if(empty($eventData))
             return;
 
-        return $cc_event_data;
-	}
+        return $eventData;
+    }
 
-    public function insertmeta(){
+    public function insertMeta()
+    {
         if(Mage::Helper('convertcart_analytics')->isEnabled() == false)
             return;
 
-        $meta_data = array();
-        if(Mage::getSingleton('customer/session')->isLoggedIn()){
-            $meta_data['customer_status'] = 'logged_in';
-            $meta_data['customer_email'] = Mage::getSingleton('customer/session')->getCustomer()->getEmail();
+        $metaData = array();
+        if ( Mage::getSingleton('customer/session')->isLoggedIn() )
+        {
+            $metaData['customer_status'] = 'logged_in';
+            $metaData['customer_email'] = Mage::getSingleton('customer/session')->getCustomer()->getEmail();
         }
         else
-            $meta_data['customer_status'] = 'guest';
+            $metaData['customer_status'] = 'guest';
 
-        $meta_data['current_currency'] = Mage::app()->getStore()->getCurrentCurrencyCode();
-        $meta_data['language'] = Mage::app()->getLocale()->getLocaleCode();
-        $meta_data['base_currency'] = Mage::app()->getStore()->getBaseCurrencyCode();
+        $metaData['current_currency'] = Mage::app()->getStore()->getCurrentCurrencyCode();
+        $metaData['language'] = Mage::app()->getLocale()->getLocaleCode();
+        $metaData['base_currency'] = Mage::app()->getStore()->getBaseCurrencyCode();
 
-        $meta_data['magento_store_code'] = Mage::app()->getStore()->getCode();
-        $meta_data['magento_website_code'] = Mage::app()->getWebsite()->getCode();
-        $meta_data['magento_store_id'] = Mage::app()->getStore()->getId();
-        $meta_data['magento_website_id'] = Mage::app()->getWebsite()->getId();
+        $metaData['magento_store_code'] = Mage::app()->getStore()->getCode();
+        $metaData['magento_website_code'] = Mage::app()->getWebsite()->getCode();
+        $metaData['magento_store_id'] = Mage::app()->getStore()->getId();
+        $metaData['magento_website_id'] = Mage::app()->getWebsite()->getId();
 
-        $meta_data['platform'] = "Magento";
-        $meta_data['platform_version'] = Mage::getVersion();     
+        $metaData['platform'] = "Magento";
+        $metaData['platform_version'] = Mage::getVersion();     
 
-        return $meta_data;
+        return $metaData;
     }
 
-	public function storeData($event_data)
+    public function storeData($eventData)
     {
         if(Mage::Helper('convertcart_analytics')->isEnabled() == false)
             return;
 
         $session = $this->_getSession();
-        $cc_data = $session->getCc_Events();
+        $ccData = $session->getCc_Events();
 
-        if(!$cc_data or empty($cc_data)){
-            $cc_data = array();
-            $cc_data[] = $event_data;
+        if(!$ccData or empty($ccData)){
+            $ccData = array();
+            $ccData[] = $eventData;
         }
         else
-            $cc_data[] = $event_data;
+            $ccData[] = $eventData;
 
-        $session->setCc_Events($cc_data);
+        $session->setCc_Events($ccData);
         return $this;
-	}
+    }
     
     public function clearData()
     {
