@@ -14,8 +14,6 @@
                 </args>
             </cc_analytics>
         </routers>
-    </frontend>
-    <global>
         <events>
             <controller_action_layout_render_before>
                 <observers>
@@ -228,8 +226,29 @@
                       </convertcart_analytics_removeFromCompare>
                   </observers>
             </catalog_product_compare_remove_product>  
-        </events>
 
+            <controller_action_postdispatch_checkout_cart_couponPost>
+                <observers>
+                    <convertcart_analytics_couponInfo>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>couponInfo</method>
+                    </convertcart_analytics_couponInfo>            
+                </observers>          
+            </controller_action_postdispatch_checkout_cart_couponPost>
+
+            <review_save_after>
+                <observers>
+                    <convertcart_analytics_reviewSave>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>reviewSave</method>
+                    </convertcart_analytics_reviewSave>            
+                </observers>          
+            </review_save_after>            
+        </events>
+    </frontend>
+    <global>
         <models>
           <convertcart_analytics>
               <class>Convertcart_Analytics_Model</class>
