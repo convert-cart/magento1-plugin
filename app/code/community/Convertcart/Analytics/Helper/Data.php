@@ -24,7 +24,10 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
 							'update_wishlist'	=>	'update_wishlist',
 							'addToCompare'		=>	'add_to_compare',
 							'removeFromCompare'	=>	'remove_from_compare',
-							'compareView'		=>	'compare_view'
+							'compareView'		=>	'compare_view',
+							'couponInfo'		=>  'couponInfo',
+							'reviewSave'		=>	'reviewSave'
+
 							);
 		if(isset($event_map[$event]))
 			return $event_map[$event];
@@ -76,9 +79,11 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
 
 	public function generateKey(){
 		$api_key = Mage::getStoreConfig('convertcart_options/convercart_config/convercart_api');
-		if(!isset($api_key) or $api_key == ''){
+		$reset_api_key = Mage::getStoreConfig('convertcart_options/convercart_config/reset_api');		
+		if((!isset($api_key) or $api_key == '') or $reset_api_key ){
 			$api_key = md5(uniqid(rand(), true));
 			Mage::getConfig()->saveConfig('convertcart_options/convercart_config/convercart_api', $api_key, 'default', 0);
+			Mage::getConfig()->saveConfig('convertcart_options/convercart_config/reset_api', 0, 'default', 0);
 		}
 		return;
 	}
