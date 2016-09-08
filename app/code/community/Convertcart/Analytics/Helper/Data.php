@@ -107,9 +107,11 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
                 Mage::getConfig()->saveConfig('convertcart/config/api_key', $apiKey, 'default', 0);
                 Mage::getConfig()->saveConfig('convertcart/config/reset_api_key', 0, 'default', 0);
                 Mage::app()->getCacheInstance()->cleanType('config');
-                Mage::getSingleton('adminhtml/session')->addSuccess(
-                    Mage::helper('adminhtml')->__('Api key reset successfully')
-                );
+                if (isset($apiKey) and $apiKey != '') { //dont display first time
+                    Mage::getSingleton('adminhtml/session')->addSuccess(
+                        Mage::helper('adminhtml')->__('ConvertCart Api key generated successfully')
+                    );
+                }
             }
             catch (Mage_Core_Exception $e) {
                 Mage::getSingleton('adminhtml/session')->addError(
