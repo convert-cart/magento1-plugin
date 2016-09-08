@@ -17,7 +17,7 @@ class Convertcart_Analytics_SyncController extends Mage_Core_Controller_Front_Ac
 
     public function attributesAction()
     {
-        if(Mage::Helper('convertcart_analytics')->canSyncCatalog() == false){ //dont proceed if not enabled
+        if (Mage::Helper('convertcart_analytics')->canSyncCatalog() == false) { //dont proceed if not enabled
             return;
         }
 
@@ -28,7 +28,7 @@ class Convertcart_Analytics_SyncController extends Mage_Core_Controller_Front_Ac
 
     public function customerAction()
     {
-        if(Mage::Helper('convertcart_analytics')->canSyncCustomer() == false){ //dont proceed if not enabled
+        if (Mage::Helper('convertcart_analytics')->canSyncCustomer() == false) { //dont proceed if not enabled
             return;
         }
 
@@ -38,7 +38,7 @@ class Convertcart_Analytics_SyncController extends Mage_Core_Controller_Front_Ac
         $customers = Mage::getModel('convertcart_analytics/sync')->getCustomers($updatedAt, $limit);
         $customerData = array();
         $c=0;
-        foreach($customers as $key => $customerId){
+        foreach ($customers as $key => $customerId) {
             $customerData[$c] = Mage::getModel('customer/customer_api')->info($customerId);
             //we done hash, dont send these fields
             unset($customerData[$c]['password_hash']);
@@ -56,7 +56,7 @@ class Convertcart_Analytics_SyncController extends Mage_Core_Controller_Front_Ac
 
     public function orderAction()
     {
-        if(Mage::Helper('convertcart_analytics')->canSyncOrder() == false){ //dont proceed if not enabled
+        if (Mage::Helper('convertcart_analytics')->canSyncOrder() == false) { //dont proceed if not enabled
             return;
         }
 
@@ -65,7 +65,7 @@ class Convertcart_Analytics_SyncController extends Mage_Core_Controller_Front_Ac
 
         $orders = Mage::getModel('convertcart_analytics/sync')->getOrders($updatedAt, $limit);
         $orderData = array();
-        foreach($orders as $key => $incrementId){
+        foreach ($orders as $key => $incrementId) {
             $orderData[] = Mage::getModel('sales/order_api')->info($incrementId);
         }
         $this->getResponse()->setHeader('Content-type', 'application/json');
@@ -74,7 +74,7 @@ class Convertcart_Analytics_SyncController extends Mage_Core_Controller_Front_Ac
 
     public function catalogAction()
     {
-        if(Mage::Helper('convertcart_analytics')->canSyncCatalog() == false){ //dont proceed if not enabled
+        if (Mage::Helper('convertcart_analytics')->canSyncCatalog() == false) { //dont proceed if not enabled
             return;
         }
 
@@ -90,7 +90,7 @@ class Convertcart_Analytics_SyncController extends Mage_Core_Controller_Front_Ac
 
     public function categoryAction()
     {
-        if(Mage::Helper('convertcart_analytics')->canSyncCatalog() == false){ //dont proceed if not enabled
+        if (Mage::Helper('convertcart_analytics')->canSyncCatalog() == false) { //dont proceed if not enabled
             return;
         }
 
@@ -103,7 +103,7 @@ class Convertcart_Analytics_SyncController extends Mage_Core_Controller_Front_Ac
             ->addFieldToFilter('path', array('like'=> "1/$rootid/%"));
 
         $categoryData = array();
-        foreach ($categories as $category){
+        foreach ($categories as $category) {
             $categoryData[] = Mage::getModel('catalog/category_api')->info($category->getId());
         }
         $this->getResponse()->setHeader('Content-type', 'application/json');
