@@ -1,6 +1,11 @@
 <?php
 class Convertcart_Analytics_Model_Observer
 {
+    public function generateKey()
+    {
+        Mage::Helper('convertcart_analytics')->generateKey();
+    }
+
     public function addBlock()
     {
         $cc = Mage::getSingleton('convertcart_analytics/cc');

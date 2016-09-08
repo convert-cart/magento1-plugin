@@ -6,79 +6,79 @@
         </convertcart>
     </tabs> 
     <sections>
-        <convertcart_options translate="label" module="convertcart_analytics">
+        <convertcart translate="label" module="convertcart_analytics">
             <label>Convert Cart Keys</label>
             <tab>convertcart</tab>
             <frontend_type>text</frontend_type>
             <sort_order>1000</sort_order>
             <show_in_default>1</show_in_default>           
             <groups>
-                <convercart_config translate="label">
+                <config translate="label">
                     <label>Convert Cart Keys</label>
                     <frontend_type>text</frontend_type>
                     <sort_order>1</sort_order>
                     <show_in_default>1</show_in_default>         
                     <fields>
-                        <convercart_configkeys>
+                        <client_key>
                             <label>Enter Your Client Key</label>
                             <comment>Contact ConvertCart to get this key</comment>
                             <frontend_type>text</frontend_type>
                             <sort_order>1</sort_order>
                             <show_in_default>1</show_in_default>
-                        </convercart_configkeys>
+                        </client_key>
                     </fields>
                     <fields>
-                        <convercart_catalog translate="label">
+                        <catalog translate="label">
                             <label>Sync Catalog With ConvertCart</label>
                             <comment>Allow ConvertCart to sync your catalog</comment>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <sort_order>3</sort_order>
                             <show_in_default>1</show_in_default>
-                       </convercart_catalog>
+                       </catalog>
                     </fields>
                     <fields>
-                        <convercart_order translate="label">
+                        <order translate="label">
                             <label>Sync Orders With ConvertCart</label>
                             <comment>Allow ConvertCart to sync your orders</comment>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <sort_order>4</sort_order>
                             <show_in_default>1</show_in_default>
-                       </convercart_order>
+                       </order>
                     </fields>
                     <fields>
-                        <convercart_customer translate="label">
+                        <customer translate="label">
                             <label>Sync Customer With ConvertCart</label>
                             <comment>Allow ConvertCart to sync your customers</comment>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <sort_order>5</sort_order>
                             <show_in_default>1</show_in_default>
-                       </convercart_customer>
+                       </customer>
                     </fields>
                     <fields>
-                        <convercart_api translate="label">
+                        <api_key translate="label">
                             <label>API Key</label>
                             <comment>Please Send this key to ConvertCart</comment>
                             <frontend_type>text</frontend_type>
                             <frontend_model>Convertcart_Analytics_Block_Field_Name_Renderer</frontend_model>
                             <sort_order>6</sort_order>
                             <show_in_default>1</show_in_default>
-                       </convercart_api>
+                       </api_key>
                     </fields>
                     <fields>
-                        <reset_api translate="label">
+                        <reset_api_key translate="label">
                             <label>Reset API Key</label>
                             <comment>To Reset key, Select 'Yes'->Save Config</comment>                            
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <sort_order>28</sort_order>
                             <show_in_default>1</show_in_default>
-                        </reset_api>
+                        </reset_api_key>
                     </fields>              
-                </convercart_config>
+                </config>
             </groups>
-        </convertcart_options>
+        </convertcart>
     </sections>    
 </config>

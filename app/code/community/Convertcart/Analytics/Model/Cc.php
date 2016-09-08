@@ -16,12 +16,12 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         if(Mage::Helper('convertcart_analytics')->isEnabled() == false) //dont proceed if not enabled
             return;
 
-        $clientId = Mage::Helper('convertcart_analytics')->getKey();
-        if(!isset($clientId))
+        $clientKey = Mage::Helper('convertcart_analytics')->getClientKey();
+        if(!isset($clientKey))
             return ;
 
         $script = Mage::app()->getLayout()->createBlock('core/template')
-                  ->setClientId($clientId)
+                  ->setClientKey($clientKey)
                   ->setTemplate('convertcart/init.phtml');
         return $script;
     }
@@ -46,8 +46,7 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
             return;
 
         $metaData = array();
-        if ( Mage::getSingleton('customer/session')->isLoggedIn() )
-        {
+        if (Mage::getSingleton('customer/session')->isLoggedIn()) {
             $metaData['customer_status'] = 'logged_in';
             $metaData['customer_email'] = Mage::getSingleton('customer/session')->getCustomer()->getEmail();
         }
@@ -77,7 +76,7 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         $session = $this->_getSession();
         $ccData = $session->getCc_Events();
 
-        if(!$ccData or empty($ccData)){
+        if (!$ccData or empty($ccData)) {
             $ccData = array();
             $ccData[] = $eventData;
         }

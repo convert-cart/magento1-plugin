@@ -37,26 +37,43 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
 
     public function isEnabled()
     {
-        $this->generateKey();
-        if ($this->getKey()) {
+        if ($this->getClientKey()) {
             return 1;
         }
         else
-            return;
+            return false;
     }
 
-    public function getKey()
+    public function getClientKey()
     {
-        $clientId = Mage::getStoreConfig('convertcart_options/convercart_config/convercart_configkeys');
-        if(!isset($clientId) or $clientId == '')
-            return ;
+        $clientKey = Mage::getStoreConfig('convertcart/config/client_key');
+        if(!isset($clientKey) or $clientKey == '')
+            return false;
         else
-            return $clientId;
+            return $clientKey;
     }
+
+    public function getApiKey()
+    {
+        $apiKey = Mage::getStoreConfig('convertcart/config/api_key');
+        if(!isset($apiKey) or $apiKey == '')
+            return false;
+        else
+            return $apiKey;
+    }
+
+    public function getResetApiKey()
+    {
+        $resetApiKey = Mage::getStoreConfig('convertcart/config/reset_api_key');
+        if(!isset($resetApiKey) or $resetApiKey == '')
+            return false;
+        else
+            return $resetApiKey;
+    }    
 
     public function canSyncCatalog()
     {
-        if( Mage::getStoreConfig('convertcart_options/convercart_config/convercart_catalog') )
+        if(Mage::getStoreConfig('convertcart/config/catalog'))
             return 1;
         else{
             $this->accessDenied();
@@ -65,7 +82,7 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
 
     public function canSyncCustomer()
     {
-        if( Mage::getStoreConfig('convertcart_options/convercart_config/convercart_customer') )
+        if(Mage::getStoreConfig('convertcart/config/customer'))
             return 1;
         else{
             $this->accessDenied();
@@ -74,8 +91,7 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
 
     public function canSyncOrder()
     {
-
-        if ( Mage::getStoreConfig('convertcart_options/convercart_config/convercart_order') )
+        if (Mage::getStoreConfig('convertcart/config/order'))
             return 1;
         else
             $this->accessDenied();
@@ -83,23 +99,35 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
 
     public function generateKey()
     {
-        $apiKey = Mage::getStoreConfig('convertcart_options/convercart_config/convercart_api');
-        $resetApiKey = Mage::getStoreConfig('convertcart_options/convercart_config/reset_api');
+        $apiKey = $this->getApiKey();
+        $resetApiKey = $this->getResetApiKey();
         if ((!isset($apiKey) or $apiKey == '') or $resetApiKey ) {
-            $apiKey = md5(uniqid(rand(), true));
-            Mage::getConfig()->saveConfig('convertcart_options/convercart_config/convercart_api', $apiKey, 'default', 0);
-            Mage::getConfig()->saveConfig('convertcart_options/convercart_config/reset_api', 0, 'default', 0);
+            try {
+                $apiKey = md5(uniqid(rand(), true));
+                Mage::getConfig()->saveConfig('convertcart/config/api_key', $apiKey, 'default', 0);
+                Mage::getConfig()->saveConfig('convertcart/config/reset_api_key', 0, 'default', 0);
+                Mage::app()->getCacheInstance()->cleanType('config');
+                Mage::getSingleton('adminhtml/session')->addSuccess(
+                    Mage::helper('adminhtml')->__('Api key reset successfully')
+                );
+            }
+            catch (Mage_Core_Exception $e) {
+                Mage::getSingleton('adminhtml/session')->addError(
+                    Mage::helper('adminhtml')->__('Unable to reset api key')
+                );
+            }
         }
-        return;
+        return false;
     }
 
     public function authorize()
     {
         $request = new Zend_Controller_Request_Http();
         $requestKey = $request->getHeader("X-API-Key");
+
         //testing , uncomment this later
-        $requestKey = Mage::getStoreConfig('convertcart_options/convercart_config/convercart_api');
-        $apiKey = Mage::getStoreConfig('convertcart_options/convercart_config/convercart_api');
+        $requestKey = Mage::getStoreConfig('convertcart/config/api_key');
+        $apiKey = Mage::getStoreConfig('convertcart/config/api_key');
 
         //incase api key not yet generated
         if (!isset($apiKey) or $apiKey == '') {

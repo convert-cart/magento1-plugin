@@ -254,15 +254,46 @@
               <class>Convertcart_Analytics_Model</class>
           </convertcart_analytics>
         </models>
-
         <helpers>
           <convertcart_analytics>
               <class>Convertcart_Analytics_Helper</class>
           </convertcart_analytics>
         </helpers>
     </global>
-
+    <default>
+        <convertcart>
+            <config>
+                <catalog>1</catalog>
+            </config>
+        </convertcart>
+        <convertcart>
+            <config>
+                <order>1</order>
+            </config>
+        </convertcart>
+        <convertcart>
+            <config>
+                <customer>1</customer>
+            </config>
+        </convertcart>
+        <convertcart>
+            <config>
+                <reset_api_key>0</reset_api_key>
+            </config>
+        </convertcart>          
+    </default>
     <adminhtml>
+        <events>
+            <controller_action_predispatch>
+                <observers>
+                    <convertcart_analytics_enabled>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>generateKey</method>
+                    </convertcart_analytics_enabled>
+                </observers>
+            </controller_action_predispatch>
+        </events>        
         <acl>
             <resources>
                 <admin>
@@ -271,9 +302,9 @@
                             <children>
                                 <config>
                                     <children>
-                                        <convertcart_options>
+                                        <convertcart>
                                             <title>Convert Cart</title>
-                                        </convertcart_options>
+                                        </convertcart>
                                     </children>
                                 </config>
                             </children>
