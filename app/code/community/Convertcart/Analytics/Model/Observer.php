@@ -63,13 +63,7 @@ class Convertcart_Analytics_Model_Observer
         if (!$action) { 
             return; 
         }
-        
-        $request = $action->getRequest();
-        if (!$request) { 
-            return; 
-        }
-        
-        $params = $request->getParams();        
+             
         if (!in_array($action->getFullActionName(), array('cms_index_index'))) {
             return;
         }
@@ -89,20 +83,19 @@ class Convertcart_Analytics_Model_Observer
         if (!$action) { 
             return; 
         }
-        
-        $request = $action->getRequest();
-        if (!$request) { 
-            return; 
-        }
-
-        $params = $request->getParams();        
+              
         if (!in_array($action->getFullActionName(), array('cms_page_view'))) {
             return;
         }
 
+        $cmsInfo = Mage::getSingleton('cms/page');
+
+        if ($cmsInfo) {
+            $ccView['event_data']['title'] = $cmsInfo->getTitle();
+            $ccView['event_data']['url_slug'] = $cmsInfo->getIdentifier();        
+        }
+
         $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("cmsView");
-        $ccView['event_data']['title'] = Mage::getSingleton('cms/page')->getTitle();
-        $ccView['event_data']['url_slug'] = Mage::getSingleton('cms/page')->getIdentifier();        
         $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');         
@@ -176,6 +169,7 @@ class Convertcart_Analytics_Model_Observer
 
         $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("productView");
         $ccView['event_data'] = $productData;
+        $ccView['event_data']['params'] = $params;    
         $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');         
@@ -249,20 +243,47 @@ class Convertcart_Analytics_Model_Observer
 
 
     public function searchView($observer)
-    {
-        $search = $observer->getDataObject();
+    {  
+        $action = $observer->getAction();
+        if (!$action) {
+            return; 
+        }
 
+        if (!in_array($action->getFullActionName(), array('catalogsearch_result_index'))) {
+            return;
+        }
+
+        $request = $action->getRequest();
+        if (!$request) {
+            return; 
+        }
+        
+        $params = $request->getParams();
+        $block = Mage::app()->getLayout()->getBlock("search_result_list");
+        if ($block) {
+            $collection = $block->getLoadedProductCollection();
+
+            if(!$collection)
+                return;
+
+            $ccView['event_data']['items_count'] = $collection->getSize();
+
+            $searchResults = array();
+            foreach ($collection as $item) {
+                $searchResult['id'] = $item->getId();
+                $searchResult['sku'] = $item->getSku(); 
+                $searchResult['name'] = $item->getName();
+                $searchResults[] = $searchResult;                           
+            }
+            $ccView['event_data']['items'] = $searchResults;
+        }
+
+        $search = $observer->getDataObject();
         if ($search) {
-            $ccView['event_data']['number_results'] = $search->getNumResults();
             $ccView['event_data']['query'] = $search->getQueryText();
         }
 
         //in some themes / modules above approach doesnt work..
-
-        $request = Mage::app()->getRequest();
-        if ($request) {
-            $params = $request->getParams();
-        }
 
         if (!$ccView['event_data']['query'] and $params) {
             $ccView['event_data']['query'] = $params['q'];
@@ -282,13 +303,7 @@ class Convertcart_Analytics_Model_Observer
         if (!$action) {
             return; 
         }
-        
-        $request = $action->getRequest();
-        if (!$request) {
-            return; 
-        }
-        
-        $params = $request->getParams();        
+            
         if (!in_array($action->getFullActionName(), array('checkout_cart_index'))) {
             return;
         }
@@ -331,12 +346,6 @@ class Convertcart_Analytics_Model_Observer
             return;
         }
         
-        $request = $action->getRequest();
-        if (!$request) {
-            return; 
-        }
-        
-        $params = $request->getParams();
         if (!in_array($action->getFullActionName(), array('checkout_onepage_index'))) {
             return;
         }
@@ -626,12 +635,6 @@ class Convertcart_Analytics_Model_Observer
             return; 
         }
         
-        $request = $action->getRequest();
-        if (!$request) {
-            return; 
-        }
-        
-        $params = $request->getParams();
         if (!in_array($action->getFullActionName(), array('catalog_product_compare_index'))) {
             return;
         }

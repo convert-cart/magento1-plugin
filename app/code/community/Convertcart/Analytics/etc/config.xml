@@ -73,18 +73,15 @@
                         <class>Convertcart_Analytics_Model_Observer</class>
                         <method>checkoutView</method>
                     </convertcart_analytics_checkout_view>
-                  </observers>                    
-            </controller_action_layout_generate_blocks_after>
-
-            <catalogsearch_query_load_after>
+                </observers>
                 <observers>
-                    <convertcart_analytics_search_view>
-                        <type>singleton</type>
-                        <class>Convertcart_Analytics_Model_Observer</class>
-                        <method>searchView</method>
-                    </convertcart_analytics_search_view>
+                        <convertcart_analytics_search_view>
+                            <type>singleton</type>
+                            <class>Convertcart_Analytics_Model_Observer</class>
+                            <method>searchView</method>
+                        </convertcart_analytics_search_view>
                 </observers>          
-            </catalogsearch_query_load_after> 
+            </controller_action_layout_generate_blocks_after> 
 
             <customer_register_success>
                 <observers>
