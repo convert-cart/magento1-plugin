@@ -127,6 +127,16 @@ class Convertcart_Analytics_Model_Observer
         if(!is_object($product))
             return;
 
+        $summaryData = Mage::getModel('review/review_summary')->load($product->getId());
+
+        if(is_object($summaryData))
+            $ratingPercent = $summaryData->getRatingSummary();
+
+        if($ratingPercent > 0)
+            $rating = ($ratingPercent/100)*5;
+        else
+            $rating = 0;
+
         $productData = array(
             'id' => $product->getId(),
             'url' => $product->getProductUrl(),
@@ -134,7 +144,8 @@ class Convertcart_Analytics_Model_Observer
             'price' => $product->getPrice(),
             'final_price' => $product->getFinalPrice(),            
             'description' => strip_tags($product->getShortDescription()),
-            'sku' => $product->getSku()
+            'sku' => $product->getSku(),
+            'rating' => $rating
         );
 
         $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
