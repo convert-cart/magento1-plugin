@@ -201,40 +201,16 @@ class Convertcart_Analytics_Model_Observer
         
         $params = $request->getParams();
 
-
         if (!in_array($action->getFullActionName(), array('catalog_category_view'))) {
             return;
-        }
-
-        $layout = Mage::getSingleton('core/layout');
-        if (!$layout) {
-            return; 
-        }
-
-        $block = $layout->getBlock('product_list');
-        if (!$block) {
-            Mage::Log("No product_list block Object found ");
-            return; 
-        }
-
-        $collection = $block->getLoadedProductCollection();
-
-        foreach ($collection as $product) {
-            $categoryItem['id'] = $product->getId();
-            $categoryItem['name'] = $product->getName();            
-            $categoryItems[] = $categoryItem;
         }
 
         $toolbar = Mage::getBlockSingleton('catalog/product_list_toolbar');
         $category = Mage::getSingleton('catalog/layer')->getCurrentCategory();
 
         $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("categoryView");
-        $ccView['event_data']['items'] = $categoryItems;
 
         $ccView['event_data']['params'] = $params;
-
-        if($collection)
-            $ccView['event_data']['total_products'] = $collection->getSize();
 
         if ($toolbar) {
             $ccView['event_data']['sort_by'] = $toolbar->getCurrentOrder()." - ".$toolbar->getCurrentDirection();
@@ -255,43 +231,15 @@ class Convertcart_Analytics_Model_Observer
 
     public function searchView($observer)
     {  
-        $action = $observer->getAction();
-        if (!$action) {
-            return; 
+        $request = Mage::app()->getRequest();
+        if ($request) {
+            $params = $request->getParams();
         }
 
-        if (!in_array($action->getFullActionName(), array('catalogsearch_result_index'))) {
-            return;
-        }
-
-        $request = $action->getRequest();
-        if (!$request) {
-            return; 
-        }
-        
-        $params = $request->getParams();
-        $block = Mage::app()->getLayout()->getBlock("search_result_list");
-        if ($block) {
-            $collection = $block->getLoadedProductCollection();
-
-            if(!$collection)
-                return;
-
-            $ccView['event_data']['items_count'] = $collection->getSize();
-
-            $searchResults = array();
-            foreach ($collection as $item) {
-                $searchResult['id'] = $item->getId();
-                $searchResult['sku'] = $item->getSku(); 
-                $searchResult['name'] = $item->getName();
-                $searchResults[] = $searchResult;                           
-            }
-            $ccView['event_data']['items'] = $searchResults;
-        }
-
-        $search = $observer->getDataObject();
-        if ($search) {
-            $ccView['event_data']['query'] = $search->getQueryText();
+        $query = $observer->getDataObject();
+        if ($query) {
+            $ccView['event_data']['query'] = $query->getQueryText();
+            $ccView['event_data']['items_count'] = $query->getNumResults();
         }
 
         //in some themes / modules above approach doesnt work..
@@ -305,7 +253,6 @@ class Convertcart_Analytics_Model_Observer
         $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
         $cc = Mage::getSingleton('convertcart_analytics/cc');         
         $cc->storeData($ccView);
-
     }//searchView function ends
 
     public function cartView($observer)
