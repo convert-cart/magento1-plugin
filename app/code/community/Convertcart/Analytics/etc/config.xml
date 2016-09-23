@@ -31,7 +31,7 @@
                     <convertcart_analytics_init>
                         <type>singleton</type>
                         <class>Convertcart_Analytics_Model_Observer</class>
-                        <method>cc_init</method>
+                        <method>ccInit</method>
                     </convertcart_analytics_init>
                 </observers>
             </controller_action_layout_render_before>
@@ -118,11 +118,11 @@
 
             <checkout_cart_product_add_after>
                 <observers>
-                    <convertcart_analytics_addtocart>
+                    <convertcart_analytics_addToCart>
                         <type>singleton</type>
                         <class>Convertcart_Analytics_Model_Observer</class>
-                        <method>addtocart</method>
-                    </convertcart_analytics_addtocart>            
+                        <method>addToCart</method>
+                    </convertcart_analytics_addToCart>            
                 </observers>          
             </checkout_cart_product_add_after>
 

@@ -48,19 +48,34 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         $metaData = array();
         if (Mage::getSingleton('customer/session')->isLoggedIn()) {
             $metaData['customer_status'] = 'logged_in';
-            $metaData['customer_email'] = Mage::getSingleton('customer/session')->getCustomer()->getEmail();
+            $customer = Mage::getSingleton('customer/session')->getCustomer();
+            if(!is_object($customer))
+                return $metaData;
+            $metaData['customer_email'] = $customer>getEmail();
         }
         else
             $metaData['customer_status'] = 'guest';
 
-        $metaData['current_currency'] = Mage::app()->getStore()->getCurrentCurrencyCode();
-        $metaData['language'] = Mage::app()->getLocale()->getLocaleCode();
-        $metaData['base_currency'] = Mage::app()->getStore()->getBaseCurrencyCode();
+        $store = Mage::app()->getStore();
 
-        $metaData['magento_store_code'] = Mage::app()->getStore()->getCode();
-        $metaData['magento_website_code'] = Mage::app()->getWebsite()->getCode();
-        $metaData['magento_store_id'] = Mage::app()->getStore()->getId();
-        $metaData['magento_website_id'] = Mage::app()->getWebsite()->getId();
+        if(!is_object($store))
+            return $metaData;
+
+        $metaData['current_currency'] = $store->getCurrentCurrencyCode();
+        $metaData['base_currency'] = $store->getBaseCurrencyCode();
+
+        $metaData['language'] = Mage::app()->getLocale()->getLocaleCode();
+
+        $metaData['magento_store_code'] = $store->getCode();
+        $metaData['magento_store_id'] = $store->getId();
+
+        $website = Mage::app()->getWebsite();
+
+        if(!is_object($website))
+            return $metaData;
+
+        $metaData['magento_website_id'] = $website->getId();
+        $metaData['magento_website_code'] = $website->getCode();
 
         $metaData['platform'] = "Magento";
         $metaData['platform_version'] = Mage::getVersion();     

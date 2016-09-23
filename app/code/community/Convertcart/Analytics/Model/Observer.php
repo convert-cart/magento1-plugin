@@ -37,7 +37,7 @@ class Convertcart_Analytics_Model_Observer
         }//foreach singles_event
     }//addBlock function ends
 
-    public function cc_init()
+    public function ccInit()
     {
         $cc = Mage::getSingleton('convertcart_analytics/cc');
         $initData = $cc->getInitScript();
@@ -54,7 +54,7 @@ class Convertcart_Analytics_Model_Observer
             return;
         }
         $layout->getBlock('head')->append($initData);
-    }//cc_init function ends
+    }//ccInit function ends
 
 
     public function homepageView($observer)
@@ -143,7 +143,7 @@ class Convertcart_Analytics_Model_Observer
             'name' => $product->getName(),
             'price' => $product->getPrice(),
             'final_price' => $product->getFinalPrice(),            
-            'description' => strip_tags($product->getShortDescription()),
+            'short_description' => strip_tags($product->getShortDescription()),
             'sku' => $product->getSku(),
             'rating' => $rating
         );
@@ -164,7 +164,7 @@ class Convertcart_Analytics_Model_Observer
         foreach ($categories as $category) {
             $productData['category'][$c]['name'] = $category->getName();
             $productData['category'][$c]['id'] = $category->getId();            
-            $c++;            
+            $c++;
         }
 
         $productData['type'] = $product->getTypeId();
@@ -394,7 +394,7 @@ class Convertcart_Analytics_Model_Observer
         $cc->storeData($ccData);
     }//customerRegister function ends
 
-    public function addtocart($observer)
+    public function addToCart($observer)
     {
         $product = $observer->getProduct();
         $cart['name'] = str_replace("'", "", $product->getName());
@@ -403,13 +403,13 @@ class Convertcart_Analytics_Model_Observer
         $cart['id'] = $product->getId();
         $cart['sku'] = $product->getSku();      
 
-        $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("addtocart");
+        $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("addToCart");
         $ccData['event_data'] = $cart;
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');  
         $cc->storeData($ccData);
-    }//addtocart function ends
+    }//addToCart function ends
 
 
     public function removeFromCart($observer)
@@ -627,15 +627,14 @@ class Convertcart_Analytics_Model_Observer
         }
 
         if($params['remove'] == 1)
-            $status = "cancelled";
+            $status = "couponRemoved";
         elseif($couponcode == $params['coupon_code'])
-            $status = "success";
+            $status = "couponApplied";
         elseif($couponcode == '' or !$couponcode)
-            $status = "failed";        
+            $status = "couponDenied";        
 
-        $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("couponInfo");
+        $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType($status);
         $ccData['event_data']['coupon_code'] = $params['coupon_code'];
-        $ccData['event_data']['status'] = $status;
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');  
