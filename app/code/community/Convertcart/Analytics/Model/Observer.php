@@ -287,9 +287,10 @@ class Convertcart_Analytics_Model_Observer
         $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("cartView");
         $ccView['event_data']['current_cart'] = $cart;
         $ccView['event_data']['current_cart']['coupon_code'] = $quote->getCouponCode();
+        $ccView['event_data']['current_cart']['discount_amount'] = $quote->getDiscountAmount();
+        $ccView['event_data']['current_cart']['subtotal'] = $quote->getSubtotal();
         $ccView['event_data']['current_cart']['total'] = $quote->getGrandTotal();
         $ccView['event_data']['current_cart']['base_total'] = $quote->getBaseGrandTotal();
-
         $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');         
@@ -329,6 +330,8 @@ class Convertcart_Analytics_Model_Observer
         $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("checkoutView");
         $ccView['event_data']['current_cart'] = $cart;
         $ccView['event_data']['current_cart']['coupon_code'] = $quote->getCouponCode();
+        $ccView['event_data']['current_cart']['discount_amount'] = $quote->getDiscountAmount();        
+        $ccView['event_data']['current_cart']['subtotal'] = $quote->getSubtotal();
         $ccView['event_data']['current_cart']['total'] = $quote->getGrandTotal();
         $ccView['event_data']['current_cart']['base_total'] = $quote->getBaseGrandTotal();        
         $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
