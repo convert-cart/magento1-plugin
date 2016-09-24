@@ -125,9 +125,6 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
     {
         $request = new Zend_Controller_Request_Http();
         $requestKey = $request->getHeader("X-API-Key");
-
-        //testing , uncomment this later
-        $requestKey = Mage::getStoreConfig('convertcart/config/api_key');
         $apiKey = Mage::getStoreConfig('convertcart/config/api_key');
 
         //incase api key not yet generated
@@ -145,7 +142,7 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
     {
         Mage::app()->getResponse()
             ->setHeader('HTTP/1.1', '401 Unauthorized')
-            ->setBody('<h1>401 Unauthorized</h1>')
+            ->setBody('<h1>401 Unauthorized - Invalid Credentials</h1>')
             ->sendResponse();
         exit;
     }
