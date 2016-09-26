@@ -137,10 +137,15 @@ class Convertcart_Analytics_Model_Observer
         else
             $rating = 0;
 
+        if($product->getImage() == null or $product->getImage() == "no_selection")
+            $image = null;
+        else
+            $image = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $product->getImage();
         $productData = array(
             'id' => $product->getId(),
             'url' => $product->getProductUrl(),
             'name' => $product->getName(),
+            'image'=> $image,
             'price' => $product->getPrice(),
             'final_price' => $product->getFinalPrice(),            
             'short_description' => strip_tags($product->getShortDescription()),
