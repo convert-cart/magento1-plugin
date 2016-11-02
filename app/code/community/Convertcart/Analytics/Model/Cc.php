@@ -109,4 +109,12 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         return $this;
     }
 
+    public function getValue($number)
+    {
+        if ( $number == null or !isset($number) )
+            return 0;
+        else
+            return $number;
+    }
+
 }

@@ -139,21 +139,24 @@ class Convertcart_Analytics_Model_Observer
         else
             $rating = 0;
 
-        if($product->getImage() == null or $product->getImage() == "no_selection")
-            $image = null;
-        else
-            $image = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $product->getImage();
+        $store = Mage::app()->getStore();
+        if(is_object($store))
+            $currency = $store->getCurrentCurrencyCode();
+
         $productData = array(
             'id' => $product->getId(),
             'url' => $product->getProductUrl(),
             'name' => $product->getName(),
-            'image'=> $image,
             'price' => $product->getPrice(),
-            'final_price' => $product->getFinalPrice(),            
+            'final_price' => $product->getFinalPrice(), 
+            'currency' => $currency,           
             'short_description' => strip_tags($product->getShortDescription()),
             'sku' => $product->getSku(),
             'rating' => $rating
         );
+
+        if($product->getImage() != null and $product->getImage() != "no_selection")
+            $productData['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $product->getImage();
 
         $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
         if (is_object($stock)) {
@@ -185,13 +188,8 @@ class Convertcart_Analytics_Model_Observer
         else
             $productData['product_type'] = "simple";
 
-        $store = Mage::app()->getStore();
-        if(is_object($store))
-            $currency = $store->getCurrentCurrencyCode();
-
         $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("productView");
         $ccView['event_data'] = $productData;
-        $ccView['event_data']['currency'] = $currency;
         $ccView['event_data']['params'] = $params;    
         $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
@@ -230,9 +228,11 @@ class Convertcart_Analytics_Model_Observer
         }//if toolbar ends
 
         if ($category) {
-            $ccView['event_data']['category_name'] = $category->getName();
-            $ccView['event_data']['category_id'] = $category->getId();
+            $ccView['event_data']['name'] = $category->getName();
+            $ccView['event_data']['id'] = $category->getId();
         }
+        elseif(isset($params['id']))
+            $ccView['event_data']['id'] = $params['id'];   
 
         $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
@@ -283,6 +283,10 @@ class Convertcart_Analytics_Model_Observer
             return;
         }
 
+        $store = Mage::app()->getStore();
+        if(is_object($store))
+            $currency = $store->getCurrentCurrencyCode();
+
         $cartItems = $quote->getAllVisibleItems();
         $cart = array();
 
@@ -290,28 +294,39 @@ class Convertcart_Analytics_Model_Observer
             $cartItem = array();
             $cartItem['name'] = str_replace("'", "", $item->getName());
             $cartItem['price'] = $item->getPrice();
+            $cartItem['currency'] = $currency;
             $cartItem['quantity'] = $item->getQty();
             $cartItem['id'] = $item->getProductId();
             $cartItem['sku'] = $item->getSku();
+
+            $product = $item->getProduct();
+            if (is_object($product)) {
+                $cartItem['url'] = $product->getProductUrl();
+            }
+            $resource = Mage::getSingleton('catalog/product')->getResource();
+
+            if (is_object($resource)) {
+                $resource = Mage::getSingleton('catalog/product')->getResource();
+                if(is_object($store))
+                    $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
+                if($imagePath != null and $imagePath != "no_selection")
+                    $cartItem['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+            }
             $cart[] = $cartItem;
         }
 
-        $store = Mage::app()->getStore();
-        if(is_object($store))
-            $currency = $store->getCurrentCurrencyCode();        
-
+        $cc = Mage::getSingleton('convertcart_analytics/cc');
         $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("cartView");
         $ccView['event_data']['items'] = $cart;
         $ccView['event_data']['currency'] = $currency;
         $ccView['event_data']['coupon_code'] = $quote->getCouponCode();
-        $ccView['event_data']['subtotal'] = $quote->getSubtotal();
-        $ccView['event_data']['total'] = $quote->getGrandTotal();
-        $ccView['event_data']['base_total'] = $quote->getBaseGrandTotal();
+
+        $ccView['event_data']['subtotal'] = $cc->getValue($quote->getSubtotal());
+        $ccView['event_data']['total'] = $cc->getValue($quote->getGrandTotal());
+        $ccView['event_data']['base_total'] = $cc->getValue($quote->getBaseGrandTotal());
         $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
-        $cc = Mage::getSingleton('convertcart_analytics/cc');         
         $cc->storeData($ccView);
-
     } // cartView function ends    
 
     public function checkoutView($observer)
@@ -330,6 +345,10 @@ class Convertcart_Analytics_Model_Observer
             return;
         }
 
+        $store = Mage::app()->getStore();
+        if(is_object($store))
+            $currency = $store->getCurrentCurrencyCode();
+
         $cartItems = $quote->getAllVisibleItems();
         $cart = array();
 
@@ -337,26 +356,37 @@ class Convertcart_Analytics_Model_Observer
             $cartItem = array();
             $cartItem['name'] = str_replace("'", "", $item->getName());
             $cartItem['price'] = $item->getPrice();
+            $cartItem['currency'] = $currency;
             $cartItem['quantity'] = $item->getQty();
             $cartItem['id'] = $item->getProductId();
             $cartItem['sku'] = $item->getSku();      
+            $product = $item->getProduct();
+            if (is_object($product)) {
+                $cartItem['url'] = $product->getProductUrl();
+            }
+            $resource = Mage::getSingleton('catalog/product')->getResource();
+
+            if (is_object($resource)) {
+                $resource = Mage::getSingleton('catalog/product')->getResource();
+                if(is_object($store))
+                    $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
+                if($imagePath != null and $imagePath != "no_selection")
+                    $cartItem['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+            }
             $cart[] = $cartItem;
         }
 
-        $store = Mage::app()->getStore();
-        if(is_object($store))
-            $currency = $store->getCurrentCurrencyCode();        
-
+        $cc = Mage::getSingleton('convertcart_analytics/cc');
         $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("checkoutView");
         $ccView['event_data']['items'] = $cart;
         $ccView['event_data']['currency'] = $currency;
         $ccView['event_data']['coupon_code'] = $quote->getCouponCode();
-        $ccView['event_data']['subtotal'] = $quote->getSubtotal();
-        $ccView['event_data']['total'] = $quote->getGrandTotal();
-        $ccView['event_data']['base_total'] = $quote->getBaseGrandTotal();        
+
+        $ccView['event_data']['subtotal'] = $cc->getValue($quote->getSubtotal());
+        $ccView['event_data']['total'] = $cc->getValue($quote->getGrandTotal());
+        $ccView['event_data']['base_total'] = $cc->getValue($quote->getBaseGrandTotal());
         $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
-        $cc = Mage::getSingleton('convertcart_analytics/cc');         
         $cc->storeData($ccView);
     } // checkoutView function ends    
 
@@ -374,14 +404,19 @@ class Convertcart_Analytics_Model_Observer
              ->load()
              ->getTotals();
 
-        $customerData['lifetime_sales'] =  $customerTotals->getLifetime();
+        $store = Mage::app()->getStore();
+        if(is_object($store))
+            $currency = $store->getCurrentCurrencyCode();
+        $customerData['currency'] =  $currency;
         $customerData['num_orders'] =  $customerTotals->getNumOrders();
+
+        $cc = Mage::getSingleton('convertcart_analytics/cc');
+        $customerData['lifetime_sales'] =  $cc->getValue($customerTotals->getLifetime());
 
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("loggedIn");
         $ccData['event_data'] = $customerData;
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
-        $cc = Mage::getSingleton('convertcart_analytics/cc');
         $cc->storeData($ccData);
     }//loggedIn function ends
 
@@ -420,19 +455,24 @@ class Convertcart_Analytics_Model_Observer
     public function addToCart($observer)
     {
         $product = $observer->getProduct();
-        $cart['name'] = str_replace("'", "", $product->getName());
-        $cart['price'] = $product->getFinalPrice();
-        $cart['quantity'] = $product->getQty();
-        $cart['id'] = $product->getId();
-        $cart['sku'] = $product->getSku();      
-
         $store = Mage::app()->getStore();
         if(is_object($store))
             $currency = $store->getCurrentCurrencyCode();
 
+        $cart['name'] = str_replace("'", "", $product->getName());
+        $cart['price'] = $product->getFinalPrice();
+        $cart['currency'] = $currency;
+        $cart['quantity'] = $product->getQty();
+        $cart['id'] = $product->getId();
+        $cart['sku'] = $product->getSku();
+        $cart['url'] = $product->getProductUrl();
+
+        $imagePath = $product->getImage();
+        if($imagePath != null and $imagePath != "no_selection")
+            $cart['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+        
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("addToCart");
         $ccData['event_data'] = $cart;
-        $ccData['event_data']['currency'] = $currency;
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');  
@@ -443,19 +483,24 @@ class Convertcart_Analytics_Model_Observer
     public function removeFromCart($observer)
     {
         $product = $observer->getQuoteItem()->getProduct();
-        $cart['name'] = str_replace("'", "", $product->getName());
-        $cart['price'] = $product->getFinalPrice();
-        $cart['quantity'] = $product->getQty();
-        $cart['id'] = $product->getId();
-        $cart['sku'] = $product->getSku();      
-
         $store = Mage::app()->getStore();
         if(is_object($store))
             $currency = $store->getCurrentCurrencyCode();
 
+        $cart['name'] = str_replace("'", "", $product->getName());
+        $cart['price'] = $product->getFinalPrice();
+        $cart['currency'] = $currency;
+        $cart['quantity'] = $product->getQty();
+        $cart['id'] = $product->getId();
+        $cart['sku'] = $product->getSku();      
+        $cart['url'] = $product->getProductUrl();
+
+        $imagePath = $product->getImage();
+        if($imagePath != null and $imagePath != "no_selection")
+            $cart['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("removeFromCart");
         $ccData['event_data'] = $cart;
-        $ccData['event_data']['currency'] = $currency;
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');  
@@ -465,6 +510,10 @@ class Convertcart_Analytics_Model_Observer
     public function updateCart()
     {
         $quote = Mage::getSingleton('checkout/session')->getQuote();
+        $store = Mage::app()->getStore();
+        if(is_object($store))
+            $currency = $store->getCurrentCurrencyCode();
+
         $cartItems = $quote->getAllVisibleItems();
         $cart = array();
 
@@ -472,63 +521,91 @@ class Convertcart_Analytics_Model_Observer
             $cartItem = array();
             $cartItem['name'] = str_replace("'", "", $item->getName());
             $cartItem['price'] = $item->getPrice();
+            $cartItem['currency'] = $currency;            
             $cartItem['quantity'] = $item->getQty();
             $cartItem['id'] = $item->getProductId();
             $cartItem['sku'] = $item->getSku();      
+            $product = $item->getProduct();
+            if (is_object($product)) {
+                $cartItem['url'] = $product->getProductUrl();
+            }
+            $resource = Mage::getSingleton('catalog/product')->getResource();
+
+            if (is_object($resource)) {
+                $resource = Mage::getSingleton('catalog/product')->getResource();
+                if(is_object($store))
+                    $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
+                if($imagePath != null and $imagePath != "no_selection")
+                    $cartItem['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+            }
+
             $cart[] = $cartItem;
         }
 
-        $store = Mage::app()->getStore();
-        if(is_object($store))
-            $currency = $store->getCurrentCurrencyCode();
-
+        $cc = Mage::getSingleton('convertcart_analytics/cc');  
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("updateCart");
         $ccData['event_data']['items'] = $cart;
         $ccData['event_data']['currency'] = $currency;
-        $ccData['event_data']['subtotal'] = $quote->getSubtotal();
-        $ccData['event_data']['total'] = $quote->getGrandTotal();
-        $ccData['event_data']['base_total'] = $quote->getBaseGrandTotal();
         $ccData['event_data']['coupon_code'] = $quote->getCouponCode();
+
+        $ccData['event_data']['subtotal'] = $cc->getValue($quote->getSubtotal());
+        $ccData['event_data']['total'] = $cc->getValue($quote->getGrandTotal());
+        $ccData['event_data']['base_total'] = $cc->getValue($quote->getBaseGrandTotal());
+
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
-        $cc = Mage::getSingleton('convertcart_analytics/cc');  
         $cc->storeData($ccData);
     }//updateCart function ends
 
     public function ordered($observer)
     {
         $order = $observer->getOrder();
-        foreach ($order->getAllVisibleItems() as $item) {
-            $orderItem['name'] = str_replace("'", "", $item->getName());
-            $orderItem['price'] = $item->getPrice();
-            $orderItem['quantity'] = $item->getQtyOrdered();
-            $orderItem['id'] = $item->getId();
-            $orderItem['sku'] = $item->getSku();
-            $orderItems[] = $orderItem;
-        }
-
         $store = Mage::app()->getStore();
         if(is_object($store))
             $currency = $store->getCurrentCurrencyCode();
 
-        $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("ordered");
+        foreach ($order->getAllVisibleItems() as $item) {
+            $orderItem['name'] = str_replace("'", "", $item->getName());
+            $orderItem['price'] = $item->getPrice();
+            $orderItem['currency'] = $currency;            
+            $orderItem['quantity'] = $item->getQtyOrdered();
+            $orderItem['id'] = $item->getProductId();
+            $orderItem['sku'] = $item->getSku();
 
-        $ccData['event_data']['order_id'] = $order->getIncrementId();
+            $product = $item->getProduct();
+            if (is_object($product)) {
+                $orderItem['url'] = $product->getProductUrl();
+            }
+            $resource = Mage::getSingleton('catalog/product')->getResource();
+
+            if (is_object($resource)) {
+                $resource = Mage::getSingleton('catalog/product')->getResource();
+                if(is_object($store))
+                    $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
+                if($imagePath != null and $imagePath != "no_selection")
+                    $orderItem['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+            }
+            $orderItems[] = $orderItem;
+        }
+
+        $cc = Mage::getSingleton('convertcart_analytics/cc');
+        $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("ordered");
+        $ccData['event_data']['orderId'] = $order->getIncrementId();
         $ccData['event_data']['items'] = $orderItems;
-        $ccData['event_data']['currency'] = $currency;
         $ccData['event_data']['coupon_code'] = $order->getCouponCode();
-        $ccView['event_data']['subtotal'] = $order->getSubtotal();        
-        $ccData['event_data']['total'] = $order->getGrandTotal();
-        $ccData['event_data']['base_total'] = $order->getBaseGrandTotal();        
         $ccData['event_data']['shipping_method'] = $order->getShippingDescription();
         $ccData['event_data']['payment_method'] = $order->getPayment()->getMethod(); 
         $ccData['event_data']['status'] = $order->getStatus();
-        $ccData['event_data']['shipping_amount'] = $order->getShippingAmount();
-        $ccData['event_data']['tax_amount'] = $order->getTaxAmount(); 
-        $ccData['event_data']['discount_amount'] = $order->getDiscountAmount();
+        $ccData['event_data']['currency'] = $currency;
+
+        $ccData['event_data']['shipping_amount'] = $cc->getValue($order->getShippingAmount());
+        $ccData['event_data']['tax_amount'] = $cc->getValue($order->getTaxAmount());
+        $ccData['event_data']['discount_amount'] = $cc->getValue($order->getDiscountAmount());
+        $ccView['event_data']['subtotal'] = $cc->getValue($order->getSubtotal());
+        $ccData['event_data']['total'] = $cc->getValue($order->getGrandTotal());
+        $ccData['event_data']['base_total'] = $cc->getValue($order->getBaseGrandTotal());
 
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-        $cc = Mage::getSingleton('convertcart_analytics/cc');  
         $cc->storeData($ccData);
     }//ordered function ends
 
@@ -539,6 +616,11 @@ class Convertcart_Analytics_Model_Observer
         $wishlist['name'] = str_replace("'", "", $product->getName());
         $wishlist['id'] = $product->getId();
         $wishlist['sku'] = $product->getSku();      
+        $wishlist['url'] = $product->getProductUrl();
+
+        $imagePath = $product->getImage();
+        if($imagePath != null and $imagePath != "no_selection")
+            $wishlist['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
 
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("addToWishlist");
         $ccData['event_data'] = $wishlist;
@@ -565,15 +647,28 @@ class Convertcart_Analytics_Model_Observer
             return;
         }
 
-    $wishlistItems = Mage::helper('wishlist')->getWishlistItemCollection();
-    foreach ($wishlistItems as $wishlistItem) {
-        $product = $wishlistItem->getProduct();
+        $store = Mage::app()->getStore();
+        $wishlistItems = Mage::helper('wishlist')->getWishlistItemCollection();
+        foreach ($wishlistItems as $wishlistItem) {
+            $product = $wishlistItem->getProduct();
 
-        $wlist['name'] = str_replace("'", "", $product->getName());
-        $wlist['id'] = $product->getId();
-        $wlist['quantity'] = $wishlistItem->getQty();        
-        $wishlist[] = $wlist;
-    }
+            $wlist['name'] = str_replace("'", "", $product->getName());
+            $wlist['id'] = $product->getId();
+            $wlist['quantity'] = $wishlistItem->getQty();
+
+            $wlist['url'] = $product->getProductUrl();
+
+            $resource = Mage::getSingleton('catalog/product')->getResource();
+            if (is_object($resource)) {
+                $resource = Mage::getSingleton('catalog/product')->getResource();
+                if(is_object($store))
+                    $imagePath = $resource->getAttributeRawValue($product->getId(), "image", $store);
+                if($imagePath != null and $imagePath != "no_selection")
+                    $wlist['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+            }
+            $wishlist[] = $wlist;
+        }
+
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("wishlistView");
         $ccData['event_data']['items'] = $wishlist;
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
@@ -585,6 +680,7 @@ class Convertcart_Analytics_Model_Observer
     public function removeFromWishlist($observer)
     { 
         $product  = $observer->getProduct();
+        $store = Mage::app()->getStore();
 
         $wishlistItems = Mage::helper('wishlist')->getWishlistItemCollection();
         foreach ($wishlistItems as $wishlistItem) {
@@ -592,6 +688,17 @@ class Convertcart_Analytics_Model_Observer
             $wlist['name'] = str_replace("'", "", $product->getName());
             $wlist['id'] = $product->getId();
             $wlist['sku'] = $product->getSku();
+            $wlist['url'] = $product->getProductUrl();
+
+            $resource = Mage::getSingleton('catalog/product')->getResource();
+            if (is_object($resource)) {
+                $resource = Mage::getSingleton('catalog/product')->getResource();
+                if(is_object($store))
+                    $imagePath = $resource->getAttributeRawValue($product->getId(), "image", $store);
+                if($imagePath != null and $imagePath != "no_selection")
+                    $wlist['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+            }
+
             $wishlist[] = $wlist;
         }
 
@@ -610,6 +717,11 @@ class Convertcart_Analytics_Model_Observer
         $compare['name'] = str_replace("'", "", $product->getName());
         $compare['id'] = $product->getId();
         $compare['sku'] = $product->getSku();      
+        $compare['url'] = $product->getProductUrl();
+
+        $imagePath = $product->getImage();
+        if($imagePath != null and $imagePath != "no_selection")
+            $compare['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
 
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("addToCompare");
         $ccData['event_data'] = $compare;
@@ -646,12 +758,25 @@ class Convertcart_Analytics_Model_Observer
 
         $compareCollection = Mage::helper('catalog/product_compare')->getItemCollection();
         $compareItems = array();
+        $store = Mage::app()->getStore();
 
         foreach ($compareCollection as $product) {
             $compareItem = array();
             $compareItem['sku'] = $product->getSku();
             $compareItem['id'] = $product->getId();
             $compareItem['name'] = $product->getName();            
+            $compareItem['sku'] = $product->getSku();      
+            $compareItem['url'] = $product->getProductUrl();
+
+            $resource = Mage::getSingleton('catalog/product')->getResource();
+            if (is_object($resource)) {
+                $resource = Mage::getSingleton('catalog/product')->getResource();
+                if(is_object($store))
+                    $imagePath = $resource->getAttributeRawValue($product->getId(), "image", $store);
+                if($imagePath != null and $imagePath != "no_selection")
+                    $compareItem['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+            }
+
             $compareItems[] = $compareItem;
         }
 
