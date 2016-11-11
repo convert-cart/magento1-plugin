@@ -225,6 +225,7 @@ class Convertcart_Analytics_Model_Observer
         if ($category) {
             $ccView['event_data']['name'] = $category->getName();
             $ccView['event_data']['id'] = $category->getId();
+            $ccView['event_data']['url'] = $category->getUrl();            
         }
         elseif(isset($params['id']))
             $ccView['event_data']['id'] = $params['id'];   
