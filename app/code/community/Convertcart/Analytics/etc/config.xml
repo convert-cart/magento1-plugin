@@ -5,15 +5,6 @@
         </Convertcart_Analytics>
     </modules>
     <frontend>
-        <routers>
-            <cc_analytics>
-                <use>standard</use>
-                <args>
-                    <module>Convertcart_Analytics</module>
-                    <frontName>cc</frontName>
-                </args>
-            </cc_analytics>
-        </routers>
         <events>
             <controller_action_layout_render_before>
                 <observers>
@@ -24,7 +15,6 @@
                     </Convertcart_Analytics>
                 </observers>
             </controller_action_layout_render_before>
-
 
             <controller_action_layout_render_before>            
                 <observers>
@@ -146,7 +136,7 @@
                 </observers>          
             </checkout_cart_update_items_after>
 
-            <sales_order_place_after>
+            <checkout_onepage_controller_success_action>
                 <observers>
                     <convertcart_analytics_ordered>
                         <type>singleton</type>
@@ -154,7 +144,7 @@
                         <method>ordered</method>
                     </convertcart_analytics_ordered>
                 </observers>  
-            </sales_order_place_after>
+            </checkout_onepage_controller_success_action>
 
             <catalog_block_product_list_collection>
                 <observers>
@@ -260,58 +250,4 @@
           </convertcart_analytics>
         </helpers>
     </global>
-    <default>
-        <convertcart>
-            <config>
-                <catalog>1</catalog>
-            </config>
-        </convertcart>
-        <convertcart>
-            <config>
-                <order>1</order>
-            </config>
-        </convertcart>
-        <convertcart>
-            <config>
-                <customer>1</customer>
-            </config>
-        </convertcart>
-        <convertcart>
-            <config>
-                <reset_api_key>0</reset_api_key>
-            </config>
-        </convertcart>          
-    </default>
-    <adminhtml>
-        <events>
-            <controller_action_predispatch>
-                <observers>
-                    <convertcart_analytics_enabled>
-                        <type>singleton</type>
-                        <class>Convertcart_Analytics_Model_Observer</class>
-                        <method>generateKey</method>
-                    </convertcart_analytics_enabled>
-                </observers>
-            </controller_action_predispatch>
-        </events>        
-        <acl>
-            <resources>
-                <admin>
-                    <children>
-                        <system>
-                            <children>
-                                <config>
-                                    <children>
-                                        <convertcart>
-                                            <title>Convert Cart</title>
-                                        </convertcart>
-                                    </children>
-                                </config>
-                            </children>
-                        </system>
-                    </children>
-                </admin>
-            </resources>
-        </acl>
-    </adminhtml>
 </config>

@@ -1,11 +1,6 @@
 <?php
 class Convertcart_Analytics_Model_Observer
 {
-    public function generateKey()
-    {
-        Mage::Helper('convertcart_analytics')->generateKey();
-    }
-
     public function addBlock()
     {
         $cc = Mage::getSingleton('convertcart_analytics/cc');
@@ -490,14 +485,10 @@ class Convertcart_Analytics_Model_Observer
         $cart['name'] = str_replace("'", "", $product->getName());
         $cart['price'] = $product->getFinalPrice();
         $cart['currency'] = $currency;
-        $cart['quantity'] = $product->getQty();
+        $cart['quantity'] = $observer->getQuoteItem()->getQty();
         $cart['id'] = $product->getId();
         $cart['sku'] = $product->getSku();      
         $cart['url'] = $product->getProductUrl();
-
-        $imagePath = $product->getImage();
-        if($imagePath != null and $imagePath != "no_selection")
-            $cart['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
 
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("removeFromCart");
         $ccData['event_data'] = $cart;
@@ -559,7 +550,14 @@ class Convertcart_Analytics_Model_Observer
 
     public function ordered($observer)
     {
-        $order = $observer->getOrder();
+        $orderId = $observer->getData('order_ids');
+        if ($orderId)
+            $order = Mage::getModel('sales/order')->load($orderId); 
+
+        if(!is_object($order))
+            return;
+
+        // $order = $observer->getOrder();
         $store = Mage::app()->getStore();
         if(is_object($store))
             $currency = $store->getCurrentCurrencyCode();
