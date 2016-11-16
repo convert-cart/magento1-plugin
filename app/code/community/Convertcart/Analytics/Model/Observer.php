@@ -240,8 +240,11 @@ class Convertcart_Analytics_Model_Observer
     public function searchView($observer)
     {  
         $request = Mage::app()->getRequest();
+
         if ($request) {
             $params = $request->getParams();
+            if ($request->isXmlHttpRequest()) //ajax requests, ignore
+                return;
         }
 
         $query = $observer->getDataObject();
