@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Convertcart_Sync>
+            <active>true</active>
+            <codePool>community</codePool>
+        </Convertcart_Sync>
+    </modules>
+</config>
