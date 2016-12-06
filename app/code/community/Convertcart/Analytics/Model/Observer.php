@@ -590,9 +590,21 @@ class Convertcart_Analytics_Model_Observer
             $orderItems[] = $orderItem;
         }
 
+        if ($order->getCustomerId()) {
+            $customerOrders = Mage::getResourceModel('sales/order_collection')
+                            ->addFieldToSelect('customer_id')
+                            ->addFieldToFilter('customer_id', $order->getCustomerId())
+                            ->addFieldToFilter('state', array('nin' => array('canceled','pending')));
+
+            if (is_object($customerOrders))
+                $orderCount = $customerOrders->getSize() ? $customerOrders->getSize() : 1;
+        } else
+            $orderCount = 1;
+
         $cc = Mage::getSingleton('convertcart_analytics/cc');
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("ordered");
         $ccData['event_data']['orderId'] = $order->getIncrementId();
+        $ccData['event_data']['order_count'] = $orderCount;
         $ccData['event_data']['items'] = $orderItems;
         $ccData['event_data']['coupon_code'] = $order->getCouponCode();
         $ccData['event_data']['shipping_method'] = $order->getShippingDescription();
