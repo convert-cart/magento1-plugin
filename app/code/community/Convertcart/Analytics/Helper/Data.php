@@ -19,6 +19,7 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
                             'ordered'           =>  'orderCompleted',
                             'addToWishlist'     =>  'productAddedToWishlist',
                             'removeFromWishlist'=>  'productRemovedFromWishlist',
+                            'wishlistUpdated'   =>  'wishlistUpdated',
                             'wishlistView'      =>  'wishlistViewed',
                             'addToCompare'      =>  'productAddedToCompare',
                             'removeFromCompare' =>  'productRemovedFromCompare',

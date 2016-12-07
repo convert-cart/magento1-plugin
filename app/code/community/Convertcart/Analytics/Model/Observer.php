@@ -661,30 +661,8 @@ class Convertcart_Analytics_Model_Observer
             return;
         }
 
-        $store = Mage::app()->getStore();
-        $wishlistItems = Mage::helper('wishlist')->getWishlistItemCollection();
-        foreach ($wishlistItems as $wishlistItem) {
-            $product = $wishlistItem->getProduct();
-
-            $wlist['name'] = str_replace("'", "", $product->getName());
-            $wlist['id'] = $product->getId();
-            $wlist['quantity'] = $wishlistItem->getQty();
-
-            $wlist['url'] = $product->getProductUrl();
-
-            $resource = Mage::getSingleton('catalog/product')->getResource();
-            if (is_object($resource)) {
-                $resource = Mage::getSingleton('catalog/product')->getResource();
-                if(is_object($store))
-                    $imagePath = $resource->getAttributeRawValue($product->getId(), "image", $store);
-                if($imagePath != null and $imagePath != "no_selection")
-                    $wlist['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
-            }
-            $wishlist[] = $wlist;
-        }
-
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("wishlistView");
-        $ccData['event_data']['items'] = $wishlist;
+        $ccData['event_data']['items'] = Mage::getSingleton('convertcart_analytics/cc')->getWishlistItems();
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');  
@@ -692,32 +670,9 @@ class Convertcart_Analytics_Model_Observer
     }//wishlistView function ends
 
     public function removeFromWishlist($observer)
-    { 
-        $product  = $observer->getProduct();
-        $store = Mage::app()->getStore();
-
-        $wishlistItems = Mage::helper('wishlist')->getWishlistItemCollection();
-        foreach ($wishlistItems as $wishlistItem) {
-            $product = $wishlistItem->getProduct();
-            $wlist['name'] = str_replace("'", "", $product->getName());
-            $wlist['id'] = $product->getId();
-            $wlist['sku'] = $product->getSku();
-            $wlist['url'] = $product->getProductUrl();
-
-            $resource = Mage::getSingleton('catalog/product')->getResource();
-            if (is_object($resource)) {
-                $resource = Mage::getSingleton('catalog/product')->getResource();
-                if(is_object($store))
-                    $imagePath = $resource->getAttributeRawValue($product->getId(), "image", $store);
-                if($imagePath != null and $imagePath != "no_selection")
-                    $wlist['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
-            }
-
-            $wishlist[] = $wlist;
-        }
-
-        $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("removeFromWishlist");
-        $ccData['event_data']['items'] = $wishlist;
+    {
+        $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("wishlistUpdated");
+        $ccData['event_data']['items'] = Mage::getSingleton('convertcart_analytics/cc')->getWishlistItems();
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');  

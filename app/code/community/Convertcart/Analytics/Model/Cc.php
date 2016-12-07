@@ -83,6 +83,59 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         return $metaData;
     }
 
+    public function getWishlistItems()
+    {
+        $wishlist = array();
+        $magentoVersion = Mage::getVersion();
+        if ($magentoVersion) {
+            $magentoVersion = explode(".", $magentoVersion);
+            if ($magentoVersion[1]<=4) {
+                $store = Mage::app()->getStore();
+                $wishlistItems = Mage::helper('wishlist')->getItemCollection();
+                foreach ($wishlistItems as $wishlistItem) {
+                    $wlist['sku'] = str_replace("'", "", $wishlistItem->getSku());
+                    // $wlist['quantity'] = $wishlistItem->getQty();
+                    $resource = Mage::getSingleton('catalog/product');
+                    if (is_object($resource)) {
+                        $resource = $resource->getResource();
+                        if (is_object($store) and is_object($resource)) {
+                            $imagePath = $resource->getAttributeRawValue($wishlistItem->getProductId(), "image", $store);
+                            $wlist['url_key'] = $resource->getAttributeRawValue($wishlistItem->getProductId(), "url_key", $store);
+                        }
+                        if($imagePath != null and $imagePath != "no_selection")
+                            $wlist['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+                    }
+                    $wishlist[] = $wlist;
+                }
+            } else {
+                $store = Mage::app()->getStore();
+                $wishlistItems = Mage::helper('wishlist')->getWishlistItemCollection();
+                foreach ($wishlistItems as $wishlistItem) {
+                    $product = $wishlistItem->getProduct();
+
+                    $wlist['name'] = str_replace("'", "", $product->getName());
+                    $wlist['id'] = $product->getId();
+                    $wlist['quantity'] = $wishlistItem->getQty();
+
+                    $wlist['url'] = $product->getProductUrl();
+
+                    $resource = Mage::getSingleton('catalog/product');
+                    if (is_object($resource)) {
+                        $resource = $resource->getResource();
+                        if (is_object($store) and is_object($resource)) {
+                            $imagePath = $resource->getAttributeRawValue($product->getId(), "image", $store);
+                            $wlist['sku'] = $resource->getAttributeRawValue($product->getId(), "sku", $store);
+                        }
+                        if($imagePath != null and $imagePath != "no_selection")
+                            $wlist['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+                    }
+                    $wishlist[] = $wlist;
+                }
+            } //else magento >= 1.5
+        }
+        return $wishlist;
+    }
+
     public function storeData($eventData)
     {
         if(Mage::Helper('convertcart_analytics')->isEnabled() == false)
