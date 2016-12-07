@@ -76,6 +76,26 @@
                 </observers>         
             </catalogsearch_query_load_after> 
 
+            <controller_action_postdispatch_customer_account_createpost>
+                <observers>
+                    <convertcart_analytics_customer_register_old>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>customerRegisterOld</method>
+                    </convertcart_analytics_customer_register_old>
+                </observers>          
+            </controller_action_postdispatch_customer_account_createpost>
+
+            <checkout_submit_all_after>
+               <observers>
+                  <convertcart_analytics_customer_register_check_old>
+                        <type>singleton</type>
+                        <class>Convertcart_Analytics_Model_Observer</class>
+                        <method>customerRegisterCheckOld</method>
+                  </convertcart_analytics_customer_register_check_old>
+               </observers>
+            </checkout_submit_all_after>
+
             <customer_register_success>
                 <observers>
                     <convertcart_analytics_customer_register>

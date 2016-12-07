@@ -136,6 +136,38 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         return $wishlist;
     }
 
+    public function customerRegisterOld()
+    {
+        //To support magento 1.4
+        $magentoVersion = Mage::getVersion();
+        if ($magentoVersion) {
+            $magentoVersion = explode(".", $magentoVersion);
+            if ($magentoVersion[1]>4)
+                return;
+        }
+
+        //if customer logged in, then created succssfully
+        if (!Mage::getSingleton('customer/session')->isLoggedIn()) 
+            return;
+
+        $customer = Mage::getSingleton('customer/session')->getCustomer();
+
+        if(!is_object($customer)) 
+            return;
+
+        $customerData['email'] = $customer->getEmail();
+        $customerData['first_name'] = $customer->getFirstname();
+        $customerData['last_name'] = $customer->getLastname();
+        $customerData['id'] = $customer->getId();
+
+        $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("customerRegister");
+        $ccData['event_data'] = $customerData;
+        $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
+
+        $cc = Mage::getSingleton('convertcart_analytics/cc');  
+        $cc->storeData($ccData);        
+    }
+
     public function storeData($eventData)
     {
         if(Mage::Helper('convertcart_analytics')->isEnabled() == false)
@@ -169,5 +201,4 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         else
             return $number;
     }
-
 }

@@ -451,6 +451,18 @@ class Convertcart_Analytics_Model_Observer
         $cc->storeData($ccData);
     }//customerRegister function ends
 
+    public function customerRegisterOld($observer) //addedto support magento 1.4
+    {
+        Mage::getSingleton('convertcart_analytics/cc')->customerRegisterOld();
+    }//customerRegisterOld function ends
+
+    public function customerRegisterCheckOld($observer)//addedto support magento 1.4
+    {
+        if ($observer->getQuote()->getData('checkout_method') != Mage_Checkout_Model_Type_Onepage::METHOD_REGISTER)
+            return;
+        Mage::getSingleton('convertcart_analytics/cc')->customerRegisterOld();
+    }
+
     public function addToCart($observer)
     {
         $product = $observer->getProduct();
