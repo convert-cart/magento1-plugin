@@ -456,7 +456,7 @@ class Convertcart_Analytics_Model_Observer
         Mage::getSingleton('convertcart_analytics/cc')->customerRegisterOld();
     }//customerRegisterOld function ends
 
-    public function customerRegisterCheckOld($observer)//addedto support magento 1.4
+    public function customerRegisterCheckOld($observer) //addedto support magento 1.4
     {
         if ($observer->getQuote()->getData('checkout_method') != Mage_Checkout_Model_Type_Onepage::METHOD_REGISTER)
             return;
@@ -466,21 +466,24 @@ class Convertcart_Analytics_Model_Observer
     public function addToCart($observer)
     {
         $product = $observer->getProduct();
+        $quoteItem = $observer->getQuoteItem();
         $store = Mage::app()->getStore();
-        if(is_object($store))
+
+        if (is_object($store))
             $currency = $store->getCurrentCurrencyCode();
-
-        $cart['name'] = str_replace("'", "", $product->getName());
-        $cart['price'] = $product->getFinalPrice();
-        $cart['currency'] = $currency;
-        $cart['quantity'] = $product->getQty();
-        $cart['id'] = $product->getId();
-        $cart['sku'] = $product->getSku();
-        $cart['url'] = $product->getProductUrl();
-
-        $imagePath = $product->getImage();
-        if($imagePath != null and $imagePath != "no_selection")
-            $cart['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+        if (is_object($quoteItem))
+            $cart['quantity'] = $quoteItem->getQty();
+        if (is_object($product)) {
+            $cart['name'] = str_replace("'", "", $product->getName());
+            $cart['price'] = $product->getFinalPrice();
+            $cart['currency'] = $currency;
+            $cart['id'] = $product->getId();
+            $cart['sku'] = $product->getSku();
+            $cart['url'] = $product->getProductUrl();
+            $imagePath = $product->getImage();
+            if($imagePath != null and $imagePath != "no_selection")
+                $cart['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+        }
         
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("addToCart");
         $ccData['event_data'] = $cart;
@@ -493,7 +496,14 @@ class Convertcart_Analytics_Model_Observer
 
     public function removeFromCart($observer)
     {
-        $product = $observer->getQuoteItem()->getProduct();
+        $quoteItem = $observer->getQuoteItem();
+        if (!is_object($quoteItem))
+            return;
+
+        $product = $quoteItem->getProduct();
+        if (!is_object($product))
+            return;
+
         $store = Mage::app()->getStore();
         if(is_object($store))
             $currency = $store->getCurrentCurrencyCode();
@@ -501,7 +511,7 @@ class Convertcart_Analytics_Model_Observer
         $cart['name'] = str_replace("'", "", $product->getName());
         $cart['price'] = $product->getFinalPrice();
         $cart['currency'] = $currency;
-        $cart['quantity'] = $observer->getQuoteItem()->getQty();
+        $cart['quantity'] = $quoteItem->getQty();
         $cart['id'] = $product->getId();
         $cart['sku'] = $product->getSku();      
         $cart['url'] = $product->getProductUrl();
@@ -639,8 +649,12 @@ class Convertcart_Analytics_Model_Observer
     {
         $product  = $observer->getProduct();
 
+        if(!is_object($product))
+            return;
+
         $wishlist['name'] = str_replace("'", "", $product->getName());
         $wishlist['id'] = $product->getId();
+        $wishlist['price'] = $product->getPrice();
         $wishlist['sku'] = $product->getSku();      
         $wishlist['url'] = $product->getProductUrl();
 
