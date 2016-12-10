@@ -52,6 +52,7 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
             if(!is_object($customer))
                 return $metaData;
             $metaData['customer_email'] = $customer->getEmail();
+            $metaData['customer_created_at'] = $customer->getCreatedAt();
         }
         else
             $metaData['customer_status'] = 'guest';
@@ -63,8 +64,11 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
 
         $metaData['current_currency'] = $store->getCurrentCurrencyCode();
         $metaData['base_currency'] = $store->getBaseCurrencyCode();
+        $metaData['current_currency_rate'] = $store->getCurrentCurrencyRate();
 
-        $metaData['language'] = Mage::app()->getLocale()->getLocaleCode();
+        $locale = Mage::app()->getLocale()
+        if(!is_object($locale))
+            $metaData['language'] = $locale->getLocaleCode();
 
         $metaData['magento_store_code'] = $store->getCode();
         $metaData['magento_store_id'] = $store->getId();
@@ -192,6 +196,11 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         Mage::getSingleton('convertcart_analytics/session')
         ->setCc_Events(array());
         return $this;
+    }
+
+    public function getPrice($price)
+    {
+        return Mage::helper('core')->currency($price, false, false);
     }
 
     public function getValue($number)

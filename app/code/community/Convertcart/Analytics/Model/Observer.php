@@ -138,13 +138,14 @@ class Convertcart_Analytics_Model_Observer
         if(is_object($store))
             $currency = $store->getCurrentCurrencyCode();
 
+        $cc = Mage::getModel('convertcart_analytics/cc');
         $productData = array(
             'id' => $product->getId(),
             'url' => $product->getProductUrl(),
             'name' => $product->getName(),
-            'price' => $product->getPrice(),
-            'final_price' => $product->getFinalPrice(), 
-            'currency' => $currency,           
+            'price' => $cc->getPrice($product->getPrice()),
+            'final_price' => $cc->getPrice($product->getFinalPrice()), 
+            'currency' => $currency,
             'short_description' => strip_tags($product->getShortDescription()),
             'sku' => $product->getSku(),
             'rating' => $rating
@@ -288,11 +289,12 @@ class Convertcart_Analytics_Model_Observer
 
         $cartItems = $quote->getAllVisibleItems();
         $cart = array();
+        $cc = Mage::getModel('convertcart_analytics/cc');
 
         foreach ($cartItems as $item) {
             $cartItem = array();
             $cartItem['name'] = str_replace("'", "", $item->getName());
-            $cartItem['price'] = $item->getPrice();
+            $cartItem['price'] = $cc->getPrice($item->getPrice());
             $cartItem['currency'] = $currency;
             $cartItem['quantity'] = $item->getQty();
             $cartItem['id'] = $item->getProductId();
@@ -335,7 +337,7 @@ class Convertcart_Analytics_Model_Observer
             return;
         }
         
-        if (!in_array($action->getFullActionName(), array('checkout_onepage_index'))) {
+        if (!in_array($action->getFullActionName(), array('checkout_onepage_index')) or !in_array($action->getFullActionName(), array('onepagecheckout_index_index'))) {
             return;
         }
 
@@ -350,11 +352,12 @@ class Convertcart_Analytics_Model_Observer
 
         $cartItems = $quote->getAllVisibleItems();
         $cart = array();
+        $cc = Mage::getModel('convertcart_analytics/cc');
 
         foreach ($cartItems as $item) {
             $cartItem = array();
             $cartItem['name'] = str_replace("'", "", $item->getName());
-            $cartItem['price'] = $item->getPrice();
+            $cartItem['price'] = $cc->getPrice($item->getPrice());
             $cartItem['currency'] = $currency;
             $cartItem['quantity'] = $item->getQty();
             $cartItem['id'] = $item->getProductId();
@@ -396,7 +399,7 @@ class Convertcart_Analytics_Model_Observer
         $customerData['first_name'] = $customer->getFirstname();
         $customerData['last_name'] = $customer->getLastname();
         $customerData['id'] = $customer->getId();
-
+        $customerData['created_at'] = $customer->getCreatedAt();
         $customerTotals = Mage::getResourceModel('sales/sale_collection')
              ->setOrderStateFilter(Mage_Sales_Model_Order::STATE_CANCELED, true)
              ->setCustomerFilter($customer)
@@ -474,8 +477,9 @@ class Convertcart_Analytics_Model_Observer
         if (is_object($quoteItem))
             $cart['quantity'] = $quoteItem->getQty();
         if (is_object($product)) {
+            $cc = Mage::getModel('convertcart_analytics/cc');
             $cart['name'] = str_replace("'", "", $product->getName());
-            $cart['price'] = $product->getFinalPrice();
+            $cart['price'] = $cc->getPrice($product->getFinalPrice());
             $cart['currency'] = $currency;
             $cart['id'] = $product->getId();
             $cart['sku'] = $product->getSku();
@@ -508,8 +512,9 @@ class Convertcart_Analytics_Model_Observer
         if(is_object($store))
             $currency = $store->getCurrentCurrencyCode();
 
+        $cc = Mage::getModel('convertcart_analytics/cc');
         $cart['name'] = str_replace("'", "", $product->getName());
-        $cart['price'] = $product->getFinalPrice();
+        $cart['price'] = $cc->getPrice($product->getFinalPrice());
         $cart['currency'] = $currency;
         $cart['quantity'] = $quoteItem->getQty();
         $cart['id'] = $product->getId();
@@ -533,11 +538,12 @@ class Convertcart_Analytics_Model_Observer
 
         $cartItems = $quote->getAllVisibleItems();
         $cart = array();
+        $cc = Mage::getModel('convertcart_analytics/cc');
 
         foreach ($cartItems as $item) {
             $cartItem = array();
             $cartItem['name'] = str_replace("'", "", $item->getName());
-            $cartItem['price'] = $item->getPrice();
+            $cartItem['price'] = $cc->getPrice($item->getPrice());
             $cartItem['currency'] = $currency;            
             $cartItem['quantity'] = $item->getQty();
             $cartItem['id'] = $item->getProductId();
@@ -565,10 +571,6 @@ class Convertcart_Analytics_Model_Observer
         $ccData['event_data']['currency'] = $currency;
         $ccData['event_data']['coupon_code'] = $quote->getCouponCode();
 
-        $ccData['event_data']['subtotal'] = $cc->getValue($quote->getSubtotal());
-        $ccData['event_data']['total'] = $cc->getValue($quote->getGrandTotal());
-        $ccData['event_data']['base_total'] = $cc->getValue($quote->getBaseGrandTotal());
-
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
         $cc->storeData($ccData);
@@ -588,9 +590,10 @@ class Convertcart_Analytics_Model_Observer
         if(is_object($store))
             $currency = $store->getCurrentCurrencyCode();
 
+        $cc = Mage::getModel('convertcart_analytics/cc');
         foreach ($order->getAllVisibleItems() as $item) {
             $orderItem['name'] = str_replace("'", "", $item->getName());
-            $orderItem['price'] = $item->getPrice();
+            $orderItem['price'] = $cc->getPrice($item->getPrice());
             $orderItem['currency'] = $currency;            
             $orderItem['quantity'] = $item->getQtyOrdered();
             $orderItem['id'] = $item->getProductId();
@@ -654,7 +657,6 @@ class Convertcart_Analytics_Model_Observer
 
         $wishlist['name'] = str_replace("'", "", $product->getName());
         $wishlist['id'] = $product->getId();
-        $wishlist['price'] = $product->getPrice();
         $wishlist['sku'] = $product->getSku();      
         $wishlist['url'] = $product->getProductUrl();
 
