@@ -66,7 +66,7 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         $metaData['base_currency'] = $store->getBaseCurrencyCode();
         $metaData['current_currency_rate'] = $store->getCurrentCurrencyRate();
 
-        $locale = Mage::app()->getLocale()
+        $locale = Mage::app()->getLocale();
         if(!is_object($locale))
             $metaData['language'] = $locale->getLocaleCode();
 
