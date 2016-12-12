@@ -1,6 +1,11 @@
 <?php
 class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 {
+    public $updatedAt;
+    public $limit;
+    public $offset;
+    public $storeId;
+
     public function getCountData()
     {
         $countData = array();
@@ -23,6 +28,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $customers['total_customers'] = $collection->getSize();
         $customers['first_id'] = $collection->getFirstItem()->getId();
         $customers['last_id'] = $collection->getLastItem()->getId();
+
         return $customers;
     }
 
@@ -36,6 +42,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $orders['total_orders'] = $collection->getSize();
         $orders['first_id'] = $collection->getFirstItem()->getId();
         $orders['last_id'] = $collection->getLastItem()->getId();
+
         return $orders;
     }
 
@@ -49,7 +56,19 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $products['total_products'] = $collection->getSize();
         $products['first_id'] = $collection->getFirstItem()->getId();
         $products['last_id'] = $collection->getLastItem()->getId();
+
         return $products;
+    }
+
+    public function getBaseUrl($storeId)
+    {
+        $url['base_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK);
+        $url['base_link_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_LINK);
+        $url['base_skin_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_SKIN);
+        $url['base_media_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA);
+        $url['base_js_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS);        
+
+        return $url;
     }
 
     public function getWebsitesData()
@@ -69,7 +88,8 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
                 foreach ($stores as $store) {
                     $storeCount++;
                     $storeData[$storeCount]['store_id'] = $store->getId();
-                    $storeData[$storeCount]['store_code'] = $store->getCode();   
+                    $storeData[$storeCount]['store_code'] = $store->getCode();
+                    $storeData[$storeCount]['url'] = $this->getBaseUrl($store->getId());
                 }
             }
             $websiteData[$websiteCount]['total_stores'] = $storeCount;
@@ -79,52 +99,9 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $wesbites = array();
         $websites['total_websites'] = $websiteCount;
         $websites['data'] = $websiteData;
+
         return $websites;
     }//getWebsites function ends
-
-    public function getCustomers($updatedAt = "",$limit = 2)
-    {
-        $updatedAt = strtotime($updatedAt);
-        $updatedAt = date('Y-m-d H:i:s', $updatedAt); 
-        $customers = Mage::getModel("customer/customer")
-            ->getCollection()
-            ->addAttributeToSort('updated_at', 'desc')
-            ->addAttributeToSelect('id')
-            ->addAttributeToSelect('email')
-            ->addAttributeToSelect('updated_at')
-            ->addAttributeToFilter('updated_at', array('gteq' =>$updatedAt));
-
-        if($limit>1)
-            $customers->getSelect()->limit($limit);
-
-        $customerIds = array();
-        foreach ($customers as $customer) {
-            $customerIds[] = $customer->getId();
-        }
-        return $customerIds;
-    }//getCustomers function ends
-
-    public function getOrders($updatedAt = "",$limit = 2)
-    {
-        $updatedAt = strtotime($updatedAt);
-        $updatedAt = date('Y-m-d H:i:s', $updatedAt); 
-        $orders = Mage::getModel("sales/order")
-            ->getCollection()
-            ->addAttributeToSort('updated_at', 'desc')
-            ->addAttributeToSelect('entity_id')
-            ->addAttributeToSelect('increment_id')
-            ->addAttributeToSelect('updated_at')
-            ->addAttributeToFilter('updated_at', array('gteq' =>$updatedAt));
-
-        if($limit>1)
-            $orders->getSelect()->limit($limit);
-
-        $orderIds = array();
-        foreach ($orders as $order) {
-            $orderIds[] = $order->getIncrementId();
-        }
-        return $orderIds;
-    }//getOrders function ends
 
     public function getAttributes()
     {
@@ -147,19 +124,65 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         return $attributesData;
     }
 
-    public function getProducts($updatedAt,$limit = 5,$storeId = null)
+    public function getCustomers($params)
     {
-        $updatedAt = strtotime($updatedAt);
-        $updatedAt = date('Y-m-d H:i:s', $updatedAt); 
+        $this->setParams($params);
+        $customers = Mage::getModel("customer/customer")
+            ->getCollection()
+            ->addAttributeToSort('updated_at', 'desc')
+            ->addAttributeToSelect('id')
+            ->addAttributeToSelect('email')
+            ->addAttributeToSelect('updated_at')
+            ->addAttributeToFilter('updated_at', array('gteq' =>$this->updatedAt));
+
+        $page = $this->calculatePage();
+        $customers->setPageSize($this->limit)->setCurPage($page);
+
+        $customerIds = array();
+        foreach ($customers as $customer) {
+            $customerIds[] = $customer->getId();
+        }
+
+        return $customerIds;
+    }//getCustomers function ends
+
+    public function getOrders($params)
+    {
+        $this->setParams($params);
+        $orders = Mage::getModel("sales/order")
+            ->getCollection()
+            ->addAttributeToSort('updated_at', 'desc')
+            ->addAttributeToSelect('entity_id')
+            ->addAttributeToSelect('increment_id')
+            ->addAttributeToSelect('updated_at')
+            ->addAttributeToFilter('updated_at', array('gteq' =>$this->updatedAt));
+
+        $page = $this->calculatePage();
+        $orders->setPageSize($this->limit)->setCurPage($page);
+
+        $orderIds = array();
+        foreach ($orders as $order) {
+            $orderIds[] = $order->getIncrementId();
+        }
+        return $orderIds;
+
+    }//getOrders function ends
+
+    public function getProducts($params)
+    {
+        $this->setParams($params);
+        $page = $this->calculatePage();
+        // $updatedAt = strtotime($updatedAt);
+        // $updatedAt = date('Y-m-d H:i:s', $updatedAt); 
+
         $products = Mage::getModel("catalog/product")
             ->getCollection()
             ->addAttributeToSort('updated_at', 'desc')
             ->addAttributeToSelect('*')
-            ->addAttributeToFilter('updated_at', array('gteq' =>$updatedAt))
-            ->setStoreId($storeId);
+            ->addAttributeToFilter('updated_at', array('gteq' =>$this->updatedAt));
 
-        if($limit>1)
-            $products->getSelect()->limit($limit);
+        $products->setStoreId($this->storeId);
+        $products->setPageSize($this->limit)->setCurPage($page);
 
         $productData = array();
         $p=0;
@@ -182,6 +205,54 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
             $productData[$p]['store_ids'] = $product->getStoreIds();
             $p++;
         }
+
         return $productData;
     }//getProducts function ends
+
+    public function getCategories($params)
+    {
+        $this->setParams($params);        
+
+        $rootid     = Mage::app()->getStore($this->storeid)->getRootCategoryId();
+        $categories = Mage::getModel('catalog/category')
+            ->getCollection()
+            ->addAttributeToSelect('name')
+            ->addFieldToFilter('path', array('like'=> "1/$rootid/%"));
+
+        $categoryData = array();
+        foreach ($categories as $category) {
+            $categoryData[] = Mage::getModel('catalog/category_api')->info($category->getId());
+        }
+
+        return $categoryData;
+    }// getCategories function ends
+
+    public function calculatePage()
+    {
+        if ($this->offset == 0)
+            $page = 1;
+        else
+            $page = number_format(floor($this->offset/$this->limit) + 1);
+
+        return $page;
+    }//calculatePage function ends
+
+    public function setParams($params)
+    {
+        $this->updatedAt = isset($params['updatedAt']) ? str_ireplace("T", " ", $params['updatedAt']) : '2011-07-29 00:00:00';
+        $this->limit = isset($params['limit']) ? $params['limit'] : 5;
+        $this->offset = isset($params['offset']) ? $params['offset'] : 1;
+        $this->storeId = isset($params['storeId']) ? $params['storeId'] : 1;
+    }
+
+    public function getParams()
+    {
+        $request = Mage::app()->getRequest();
+        if ($request)
+            $params = $request->getParams();
+        else
+            $params = null;
+
+        return $params;        
+    }
 }

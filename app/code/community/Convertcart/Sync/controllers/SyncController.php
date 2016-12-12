@@ -7,8 +7,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
         return parent::preDispatch();
     }
 
-    //returns count of various items in magento
-    public function countAction()
+    public function storeAction()
     {
         $countData = Mage::getModel('convertcart_sync/sync')->getCountData();
         $this->getResponse()->setHeader('Content-type', 'application/json');
@@ -32,10 +31,9 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             return;
         }
 
-        $updatedAt = '2011-12-11';
-        $limit =10;
+        $params = Mage::getModel('convertcart_sync/sync')->getParams();
+        $customers = Mage::getModel('convertcart_sync/sync')->getCustomers($params);
 
-        $customers = Mage::getModel('convertcart_sync/sync')->getCustomers($updatedAt, $limit);
         $customerData = array();
         $c=0;
         foreach ($customers as $key => $customerId) {
@@ -60,10 +58,9 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             return;
         }
 
-        $updatedAt = '2011-07-29';
-        $limit =10;
+        $params = Mage::getModel('convertcart_sync/sync')->getParams();
+        $orders = Mage::getModel('convertcart_sync/sync')->getOrders($params);
 
-        $orders = Mage::getModel('convertcart_sync/sync')->getOrders($updatedAt, $limit);
         $orderData = array();
         foreach ($orders as $key => $incrementId) {
             $orderData[] = Mage::getModel('sales/order_api')->info($incrementId);
@@ -78,11 +75,8 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             return;
         }
 
-        $updatedAt = '2011-07-29';
-        $limit =5;
-        $storeId =3;
-
-        $productData = Mage::getModel('convertcart_sync/sync')->getProducts($updatedAt, $limit, $storeId);
+        $params = Mage::getModel('convertcart_sync/sync')->getParams();
+        $productData = Mage::getModel('convertcart_sync/sync')->getProducts($params);
 
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($productData));
@@ -94,18 +88,9 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             return;
         }
 
-        $storeid=1;
+        $params = Mage::getModel('convertcart_sync/sync')->getParams();
+        $categoryData = Mage::getModel('convertcart_sync/sync')->getCategories($params);
 
-        $rootid     = Mage::app()->getStore($storeid)->getRootCategoryId();
-        $categories = Mage::getModel('catalog/category')
-            ->getCollection()
-            ->addAttributeToSelect('name')
-            ->addFieldToFilter('path', array('like'=> "1/$rootid/%"));
-
-        $categoryData = array();
-        foreach ($categories as $category) {
-            $categoryData[] = Mage::getModel('catalog/category_api')->info($category->getId());
-        }
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($categoryData));
     }
