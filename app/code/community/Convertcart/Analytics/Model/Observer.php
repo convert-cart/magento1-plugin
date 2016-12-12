@@ -337,7 +337,7 @@ class Convertcart_Analytics_Model_Observer
             return;
         }
         
-        if (!in_array($action->getFullActionName(), array('checkout_onepage_index')) or !in_array($action->getFullActionName(), array('onepagecheckout_index_index'))) {
+        if (!in_array($action->getFullActionName(), array('checkout_onepage_index')) and !in_array($action->getFullActionName(), array('onepagecheckout_index_index'))) {
             return;
         }
 
@@ -590,10 +590,9 @@ class Convertcart_Analytics_Model_Observer
         if(is_object($store))
             $currency = $store->getCurrentCurrencyCode();
 
-        $cc = Mage::getModel('convertcart_analytics/cc');
         foreach ($order->getAllVisibleItems() as $item) {
             $orderItem['name'] = str_replace("'", "", $item->getName());
-            $orderItem['price'] = $cc->getPrice($item->getPrice());
+            $orderItem['price'] = $item->getPrice();
             $orderItem['currency'] = $currency;            
             $orderItem['quantity'] = $item->getQtyOrdered();
             $orderItem['id'] = $item->getProductId();
