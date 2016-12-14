@@ -52,7 +52,6 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
             if(!is_object($customer))
                 return $metaData;
             $metaData['customer_email'] = $customer->getEmail();
-            $metaData['customer_created_at'] = $customer->getCreatedAt();
         }
         else
             $metaData['customer_status'] = 'guest';
