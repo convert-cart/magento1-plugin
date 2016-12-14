@@ -94,4 +94,17 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($categoryData));
     }
+
+    public function wishlistAction()
+    {
+        if (Mage::Helper('convertcart_sync')->canSyncCatalog() == false) { //dont proceed if not enabled
+            return;
+        }
+
+        $params = Mage::getModel('convertcart_sync/sync')->getParams();
+        $wishlistData = Mage::getModel('convertcart_sync/sync')->getWishlist($params);
+
+        $this->getResponse()->setHeader('Content-type', 'application/json');
+        $this->getResponse()->setBody(json_encode($wishlistData));
+    }
 }

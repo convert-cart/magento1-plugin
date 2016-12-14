@@ -227,6 +227,52 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         return $categoryData;
     }// getCategories function ends
 
+    public function getWishlist($params)
+    {
+        $this->setParams($params);
+        $page = $this->calculatePage();
+        
+        $wishlistCollection = Mage::getModel("wishlist/wishlist")
+            ->getCollection()
+            ->addFieldToFilter('updated_at', array('gteq' =>$this->updatedAt))
+            ->setOrder('updated_at', 'desc');
+        $wishlistCollection->setPageSize($this->limit)->setCurPage(1);
+
+        $wishlistData = array();
+        $i=0;
+
+        foreach ($wishlistCollection as $wishlist) {
+            $wishlistData[$i]['wishlist_id'] = $wishlist->getWishlistId();
+            $wishlistData[$i]['customer_id'] = $wishlist->getCustomerId();
+            $wishlistData[$i]['updated_at'] = $wishlist->getUpdatedAt();
+            $wishlistData[$i]['items'] = array();
+
+            $wishListItemCollection = $wishlist->getItemCollection();
+            if (count($wishListItemCollection)) {
+                foreach ($wishListItemCollection as $item) {
+                    $wishlistItem = array();
+                    $wishlistItem['product_id'] = $item->getProductId();
+                    $wishlistItem['name'] = $item->getProductName();
+                    $resource = Mage::getSingleton('catalog/product');
+                    if (is_object($resource) and $item->getStoreId() != null) {
+                        $resource = $resource->getResource();
+                        $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $item->getStoreId());
+                        $wishlistItem['sku'] = $resource->getAttributeRawValue($item->getProductId(), "sku", $item->getStoreId());
+                        if($imagePath != null and $imagePath != "no_selection")
+                            $wishlistItem['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+                    }
+                    $wishlistItem['url'] = $item->getProduct()->getProductUrl();
+                    $wishlistItem['qty'] = $item->getData('qty');
+                    $wishlistItem['added_at'] = $item->getData('added_at');
+                    $wishlistItem['store_id'] = $item->getStoreId();
+                    $wishlistData[$i]['items'] = $wishlistItem;
+                }
+            }
+            $i++;
+        }
+        return $wishlistData;
+    } //getWishlist function ends
+
     public function calculatePage()
     {
         if ($this->offset == 0)
