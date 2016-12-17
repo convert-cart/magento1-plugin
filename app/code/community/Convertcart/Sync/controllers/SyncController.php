@@ -3,7 +3,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
 {
     public function preDispatch()
     {
-        // Mage::helper('convertcart_sync')->authorize();
+        Mage::helper('convertcart_sync')->authorize();
         return parent::preDispatch();
     }
 
