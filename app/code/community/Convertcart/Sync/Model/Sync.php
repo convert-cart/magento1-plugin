@@ -81,8 +81,9 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
             $storeData = array();
 
             $websiteCount++;
-            $websiteData[$websiteCount]['website_code'] = $website->getCode();
             $websiteData[$websiteCount]['website_id'] = $website->getId();
+            $websiteData[$websiteCount]['website_code'] = $website->getCode();
+            $websiteData[$websiteCount]['website_name'] = $website->getName();
 
             foreach ($website->getGroups() as $group) {
                 $stores = $group->getStores();
@@ -140,12 +141,22 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
                     ->setPageSize($this->limit)
                     ->setCurPage($this->page);
 
-        $customerIds = array();
+        $c=0;
+        $customerData = array();
         foreach ($customers as $customer) {
-            $customerIds[] = $customer->getId();
+            $customerData[$c] = Mage::getModel('customer/customer_api')->info($customer->getId());
+            //we dont need hash, dont send these fields
+            unset($customerData[$c]['password_hash']);
+            unset($customerData[$c]['rp_token']);
+            unset($customerData[$c]['rp_token_created_at']);
+            unset($customerData[$c]['confirmation']);
+            unset($customerData[$c]['disable_auto_group_change']);
+            unset($customerData[$c]['reward_update_notification']);
+            unset($customerData[$c]['reward_warning_notification']);
+            $c++;
         }
 
-        return $customerIds;
+        return $customerData;
     }//getCustomers function ends
 
     public function getOrders($params)
@@ -163,12 +174,12 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
                 ->setPageSize($this->limit)
                 ->setCurPage($this->page);
 
-        $orderIds = array();
+        $orderData = array();
         foreach ($orders as $order) {
-            $orderIds[] = $order->getIncrementId();
+            $orderData[] = Mage::getModel('sales/order_api')->info($order->getIncrementId());
         }
-        return $orderIds;
 
+        return $orderData;
     }//getOrders function ends
 
     public function getProducts($params)
@@ -188,26 +199,17 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
         $productData = array();
         $p=0;
-        foreach ($products as $product) {
-            $attributes = $product->getAttributes();
-            foreach ($attributes as $attribute) {
-                $attributeCode = $attribute->getAttributeCode();
-                $frontendInput = $attribute->getFrontendInput();
+        $prodResource = Mage::getSingleton('catalog/product')->getResource();
 
-                if ($frontendInput == 'multiselect' or $frontendInput == 'select') {
-                    $productData[$p][$attributeCode] = $product->getAttributeText($attributeCode);
-                } else {
-                    $productData[$p][$attributeCode] = $product->getData($attributeCode);
-                }
-            }//foreach attributes ends
+        foreach ($products as $product) {
+            $productData[$p] = Mage::getModel('catalog/product_api')->info($product->getId(), $this->storeId);
             $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
             $productData[$p]['stock_data'] = $stock->getData();
-            $productData[$p]['product_url'] = $product->getProductUrl();
-            $productData[$p]['image_url'] = $product->getImage();
+            $productData[$p]['url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK).$productData[$p]['url_path'];
+            $productData[$p]['image_url'] = $prodResource->getAttributeRawValue($product->getId(), "image", $this->storeId);
             $productData[$p]['store_ids'] = $product->getStoreIds();
             $p++;
         }
-
         return $productData;
     }//getProducts function ends
 
@@ -234,10 +236,11 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $categoryData = array();
         foreach ($categories as $category) {            
             $cat = array();
-            $cat['category_id'] = $category->getData('id');
+            $cat['category_id'] = $category->getId();
             $cat['name']        = $category->getData('name');
             $cat['description'] = $category->getData('description');
             $cat['url_key']     = $category->getData('url_key');
+            $cat['url']     = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK).$category->getData('url_path');
             $cat['image']       = $category->getData('image');
 
             $cat['meta_title']       = $category->getData('meta_title');

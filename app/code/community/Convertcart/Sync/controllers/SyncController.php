@@ -10,6 +10,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
     public function storeAction()
     {
         $countData = Mage::getModel('convertcart_sync/sync')->getCountData();
+
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($countData));
     }//countAction ends
@@ -21,6 +22,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
         }
 
         $attributes = Mage::getModel('convertcart_sync/sync')->getAttributes();
+ 
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($attributes));
     }
@@ -32,22 +34,8 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
         }
 
         $params = Mage::getModel('convertcart_sync/sync')->getParams();
-        $customers = Mage::getModel('convertcart_sync/sync')->getCustomers($params);
+        $customerData = Mage::getModel('convertcart_sync/sync')->getCustomers($params);        
 
-        $customerData = array();
-        $c=0;
-        foreach ($customers as $key => $customerId) {
-            $customerData[$c] = Mage::getModel('customer/customer_api')->info($customerId);
-            //we done hash, dont send these fields
-            unset($customerData[$c]['password_hash']);
-            unset($customerData[$c]['rp_token']);
-            unset($customerData[$c]['rp_token_created_at']);
-            unset($customerData[$c]['confirmation']);
-            unset($customerData[$c]['disable_auto_group_change']);
-            unset($customerData[$c]['reward_update_notification']);
-            unset($customerData[$c]['reward_warning_notification']);
-            $c++;
-        }
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($customerData));
     }//customerAction ends
@@ -59,12 +47,8 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
         }
 
         $params = Mage::getModel('convertcart_sync/sync')->getParams();
-        $orders = Mage::getModel('convertcart_sync/sync')->getOrders($params);
+        $orderData = Mage::getModel('convertcart_sync/sync')->getOrders($params);
 
-        $orderData = array();
-        foreach ($orders as $key => $incrementId) {
-            $orderData[] = Mage::getModel('sales/order_api')->info($incrementId);
-        }
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($orderData));
     }//orderAction ends	
@@ -93,7 +77,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
 
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($categoryData));
-    }
+    }//categoryAction ends
 
     public function wishlistAction()
     {
@@ -106,5 +90,5 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
 
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($wishlistData));
-    }
+    }//wishlistAction ends
 }
