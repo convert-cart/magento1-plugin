@@ -12,7 +12,6 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $countData = array();
 
         $countData['websites']  = $this->getWebsitesData();
-        $countData['currency']  = $this->getCurrencyInfo();
         $countData['products']  = $this->getProductCount();
         $countData['customers'] = $this->getCustomerCount();
         $countData['orders'] = $this->getOrderCount();
@@ -93,8 +92,16 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
                     $storeData[$storeCount]['store_id'] = $store->getId();
                     $storeData[$storeCount]['store_code'] = $store->getCode();
                     $storeData[$storeCount]['store_name'] = $store->getName();                    
-                    $storeData[$storeCount]['allowed_currency'] = $store->getAvailableCurrencyCodes(true);
+
+                    $allowedCurrencies = $store->getAvailableCurrencyCodes(true);
                     $storeData[$storeCount]['base_currency'] = $store->getBaseCurrencyCode();
+                    if (is_array($allowedCurrencies) && count($allowedCurrencies) > 1) {
+                        $storeData[$storeCount]['allowed_currencies'] = Mage::getModel('directory/currency')->getCurrencyRates(
+                            $store->getBaseCurrencyCode(),
+                            $allowedCurrencies
+                        );
+                    } else
+                        $storeData[$storeCount]['allowed_currencies'] = $allowedCurrencies;
                     $storeData[$storeCount]['url'] = $this->getBaseUrl($store->getId());
                 }
             }
