@@ -258,13 +258,11 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $categories = Mage::getModel('convertcart_sync/category')
                     ->load($rootid)
                     ->getCollection()
-                    ->addAttributeToSelect('name')
-                    ->addAttributeToSelect('entity_id')
+                    ->addAttributeToSelect('*')
                     ->addFieldToFilter('path', array('like'=> "1/$rootid%"));
 
         $categories = $categories
                     ->addAttributeToSort('updated_at', 'desc')
-                    ->addAttributeToSelect('*')
                     ->addAttributeToFilter('updated_at', array('gteq' =>$this->updatedAt))
                     ->setPageSize($this->limit)
                     ->setCurPage($this->page)
