@@ -12,6 +12,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $countData = array();
 
         $countData['websites']  = $this->getWebsitesData();
+        $countData['currency']  = $this->getCurrencyInfo();
         $countData['products']  = $this->getProductCount();
         $countData['customers'] = $this->getCustomerCount();
         $countData['orders'] = $this->getOrderCount();
@@ -92,6 +93,8 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
                     $storeData[$storeCount]['store_id'] = $store->getId();
                     $storeData[$storeCount]['store_code'] = $store->getCode();
                     $storeData[$storeCount]['store_name'] = $store->getName();                    
+                    $storeData[$storeCount]['allowed_currency'] = $store->getAvailableCurrencyCodes(true);
+                    $storeData[$storeCount]['base_currency'] = $store->getBaseCurrencyCode();
                     $storeData[$storeCount]['url'] = $this->getBaseUrl($store->getId());
                 }
             }
@@ -105,6 +108,26 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
         return $websites;
     }//getWebsites function ends
+
+    public function getCurrencyInfo()
+    {
+        $currencyModel = Mage::getModel('directory/currency');
+        if(!is_object($currencyModel))
+            return;
+
+        $currencies = $currencyModel->getConfigAllowCurrencies();
+        $baseCurrencyCode = Mage::app()->getStore()->getBaseCurrencyCode();
+        $defaultCurrencies = $currencyModel->getConfigBaseCurrencies();         
+        $rates = $currencyModel->getCurrencyRates($defaultCurrencies, $currencies);
+
+        $currencyData = array();
+        $currencyData['base_currency'] = $baseCurrencyCode;
+        foreach ($rates[$baseCurrencyCode] as $key=>$value  ) {
+            $currencyData['rate'][$key] = $value;
+        }
+
+        return $currencyData;
+    }//getCurrencyInfo function ends
 
     public function getAttributes()
     {
@@ -124,7 +147,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         }//foreach attributeSet ends
 
         return $attributesData;
-    }
+    }//getAttributes function ends
 
     public function getCustomers($params)
     {
@@ -185,28 +208,42 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
     public function getProducts($params)
     {
         $this->setParams($params);
-
         $products = Mage::getModel("catalog/product")
+                    ->setStore($store)
                     ->getCollection()
                     ->addAttributeToSort('updated_at', 'desc')
-                    ->addAttributeToSelect('*')
+                    ->addAttributeToSelect('updated_at')
                     ->addAttributeToFilter('updated_at', array('gteq' => $this->updatedAt));
 
         $products = $products
                     ->setPageSize($this->limit)
                     ->setCurPage($this->page)
-                    ->setStoreId($this->storeId);
+                    ;
 
         $productData = array();
         $p=0;
-        $prodResource = Mage::getSingleton('catalog/product')->getResource();
+        foreach ($products as $_product) {
+            $product = Mage::getModel('catalog/product')
+                        ->setStoreId($this->storeId)
+                        ->load($_product->getId());
 
-        foreach ($products as $product) {
-            $productData[$p] = Mage::getModel('catalog/product_api')->info($product->getId(), $this->storeId);
+            // $productData[$p] = Mage::getModel('catalog/product_api')->info($product->getId(), $this->storeId);
+            $attributes = $product->getAttributes();
+            foreach ($attributes as $attribute) {
+                $attributeCode = $attribute->getAttributeCode();
+                $frontendInput = $attribute->getFrontendInput();
+                if ($frontendInput == 'multiselect' or $frontendInput == 'select') {
+                    $productData[$p][$attributeCode] = $product->getAttributeText($attributeCode);
+                } else {
+                    $productData[$p][$attributeCode] = $product->getData($attributeCode);
+                }
+            }//foreach attributes ends
+
             $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
             $productData[$p]['stock_data'] = $stock->getData();
-            $productData[$p]['url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK).$productData[$p]['url_path'];
-            $productData[$p]['image_url'] = $prodResource->getAttributeRawValue($product->getId(), "image", $this->storeId);
+            $productData[$p]['store_url'] = $product->getProductUrl();
+            $productData[$p]['url'] = Mage::app()->getStore($this->storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK).$product->getUrlPath();
+            $productData[$p]['image_url'] = Mage::app()->getStore($this->storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $product->getImage();
             $productData[$p]['store_ids'] = $product->getStoreIds();
             $p++;
         }
@@ -240,7 +277,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
             $cat['name']        = $category->getData('name');
             $cat['description'] = $category->getData('description');
             $cat['url_key']     = $category->getData('url_key');
-            $cat['url']     = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK).$category->getData('url_path');
+            $cat['url']         = Mage::app()->getStore($this->storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK).$category->getData('url_path');
             $cat['image']       = $category->getData('image');
 
             $cat['meta_title']       = $category->getData('meta_title');
