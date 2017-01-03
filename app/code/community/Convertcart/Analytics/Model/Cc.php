@@ -26,7 +26,7 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         return $script;
     }
 
-    public function getData()
+    public function getCcData()
     {
         if(Mage::Helper('convertcart_analytics')->isEnabled() == false) //dont proceed if not enabled
             return;

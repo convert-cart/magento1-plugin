@@ -4,7 +4,7 @@ class Convertcart_Analytics_Model_Observer
     public function addBlock()
     {
         $cc = Mage::getSingleton('convertcart_analytics/cc');
-        $ccData = $cc->getData();
+        $ccData = $cc->getCcData();
 
         //checking if anything to include
         if ($ccData==false) {
