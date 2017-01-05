@@ -6,9 +6,12 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
     public $offset;
     public $storeId;
     public $page;
+    public $order;
+    public $debug = 0;
 
     public function getCountData()
     {
+        $this->setParams($params);        
         $countData = array();
 
         $countData['websites']  = $this->getWebsitesData();
@@ -21,43 +24,32 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
     public function getCustomerCount()
     {
-        $collection = Mage::getModel("customer/customer")
+        $collection = Mage::getModel('customer/customer')
                     ->getCollection()
-                    ->addAttributeToSort('entity_id', 'asc')
                     ->addAttributeToSelect('id');
 
         $customers['total_customers'] = $collection->getSize();
-        $customers['first_id'] = $collection->getFirstItem()->getId();
-        $customers['last_id']  = $collection->getLastItem()->getId();
-
         return $customers;
     }
 
     public function getOrderCount()
     {
-        $collection = Mage::getModel("sales/order")
+        $collection = Mage::getModel('sales/order')
                     ->getCollection()
-                    ->addAttributeToSort('entity_id', 'asc')
                     ->addAttributeToSelect('entity_id');
 
         $orders['total_orders'] = $collection->getSize();
-        $orders['first_id'] = $collection->getFirstItem()->getId();
-        $orders['last_id'] = $collection->getLastItem()->getId();
 
         return $orders;
     }
 
     public function getProductCount()
     {
-        $collection = Mage::getModel("catalog/product")
+        $collection = Mage::getModel('catalog/product')
                     ->getCollection()
-                    ->addAttributeToSort('entity_id', 'asc')
                     ->addAttributeToSelect('entity_id');
 
         $products['total_products'] = $collection->getSize();
-        $products['first_id'] = $collection->getFirstItem()->getId();
-        $products['last_id'] = $collection->getLastItem()->getId();
-
         return $products;
     }
 
@@ -138,6 +130,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
     public function getAttributes()
     {
+        $this->setParams($params);        
         $attributeSets = Mage::getModel('catalog/product_attribute_set_api')->items();
         $attributesData['attribute_sets']['total_attribute_sets'] = count($attributeSets);
         $attributesData['attribute_sets']['data'] = $attributeSets;
@@ -159,9 +152,9 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
     public function getCustomers($params)
     {
         $this->setParams($params);
-        $customers = Mage::getModel("customer/customer")
+        $customers = Mage::getModel('customer/customer')
                     ->getCollection()
-                    ->addAttributeToSort('updated_at', 'desc')
+                    ->addAttributeToSort('updated_at', $this->order)
                     ->addAttributeToSelect('id')
                     ->addAttributeToSelect('email')
                     ->addAttributeToSelect('updated_at')
@@ -192,9 +185,9 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
     public function getOrders($params)
     {
         $this->setParams($params);
-        $orders = Mage::getModel("sales/order")
+        $orders = Mage::getModel('sales/order')
                 ->getCollection()
-                ->addAttributeToSort('updated_at', 'desc')
+                ->addAttributeToSort('updated_at', $this->order)
                 ->addAttributeToSelect('entity_id')
                 ->addAttributeToSelect('increment_id')
                 ->addAttributeToSelect('updated_at')
@@ -215,26 +208,27 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
     public function getProducts($params)
     {
         $this->setParams($params);
-        $products = Mage::getModel("catalog/product")
-                    ->setStore($store)
+
+        $products = Mage::getModel('catalog/product')
                     ->getCollection()
-                    ->addAttributeToSort('updated_at', 'desc')
-                    ->addAttributeToSelect('updated_at')
+                    ->setStoreId($this->storeId)
+                    ->addAttributeToSort('updated_at', $this->order)
+                    ->addAttributeToSelect('*')
                     ->addAttributeToFilter('updated_at', array('gteq' => $this->updatedAt));
 
         $products = $products
                     ->setPageSize($this->limit)
-                    ->setCurPage($this->page)
-                    ;
+                    ->setCurPage($this->page);
 
         $productData = array();
         $p=0;
-        foreach ($products as $_product) {
-            $product = Mage::getModel('catalog/product')
-                        ->setStoreId($this->storeId)
-                        ->load($_product->getId());
-
+        foreach ($products as $product) {
+            // loading model again is not optimal approach, but unable to get attribute in specific stores in a magento install
+            // $product = Mage::getModel('catalog/product')
+            //             ->setStoreId($this->storeId)
+            //             ->load($_product->getId());
             // $productData[$p] = Mage::getModel('catalog/product_api')->info($product->getId(), $this->storeId);
+
             $attributes = $product->getAttributes();
             foreach ($attributes as $attribute) {
                 $attributeCode = $attribute->getAttributeCode();
@@ -269,7 +263,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
                     ->addFieldToFilter('path', array('like'=> "1/$rootid%"));
 
         $categories = $categories
-                    ->addAttributeToSort('updated_at', 'desc')
+                    ->addAttributeToSort('updated_at', $this->order)
                     ->addAttributeToFilter('updated_at', array('gteq' =>$this->updatedAt))
                     ->setPageSize($this->limit)
                     ->setCurPage($this->page)
@@ -311,7 +305,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $wishlistCollection = Mage::getModel("wishlist/wishlist")
                             ->getCollection()
                             ->addFieldToFilter('updated_at', array('gteq' =>$this->updatedAt))
-                            ->setOrder('updated_at', 'desc');
+                            ->setOrder('updated_at', $this->order);
 
         $wishlistCollection = $wishlistCollection
                             ->setPageSize($this->limit)
@@ -360,13 +354,26 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
             $this->page = number_format(floor($this->offset/$this->limit) + 1);
     }//calculatePage function ends
 
+    public function debugMode()
+    {
+        if ($this->debug == 1) {
+            error_reporting(E_ALL);
+            ini_set('display_errors', 1);
+            Mage::setIsDeveloperMode(true);
+        }
+    }
+
     public function setParams($params)
     {
         $this->updatedAt = isset($params['updatedAt']) ? str_ireplace("T", " ", $params['updatedAt']) : '2011-07-29 00:00:00';
         // $this->updatedAt = isset($params['updatedAt']) ? date("Y-m-d h:i:s", $params['updatedAt']/1000) : '2011-07-29 00:00:00';
         $this->limit = isset($params['limit']) ? $params['limit'] : 5;
-        $this->offset = isset($params['offset']) ? $params['offset'] : 1;
-        $this->storeId = isset($params['storeId']) ? $params['storeId'] : 1;
+        $this->offset = isset($params['offset']) ? $params['offset'] : 0;
+        $this->order = isset($params['order']) ? $params['order'] : 'asc';        
+        $this->storeId = isset($params['storeId']) ? $params['storeId'] : 0;
+        $this->debug = isset($params['debug']) ? $params['debug'] : 0;
+
+        $this->debugMode();
         $this->calculatePage();
     }
 
