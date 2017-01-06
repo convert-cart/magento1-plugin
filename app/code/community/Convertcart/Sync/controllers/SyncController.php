@@ -81,7 +81,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
 
     public function wishlistAction()
     {
-        if (Mage::Helper('convertcart_sync')->canSyncCatalog() == false) { //dont proceed if not enabled
+        if (Mage::Helper('convertcart_sync')->canSyncCustomer() == false) { //dont proceed if not enabled
             return;
         }
 
@@ -91,4 +91,17 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($wishlistData));
     }//wishlistAction ends
+
+    public function newsletterAction()
+    {
+        if (Mage::Helper('convertcart_sync')->canSyncCustomer() == false) { //dont proceed if not enabled
+            return;
+        }
+
+        $params = Mage::getModel('convertcart_sync/sync')->getParams(); 
+        $newsletterSubscribers = Mage::getModel('convertcart_sync/sync')->getNewsletterSubscribers($params);
+
+        $this->getResponse()->setHeader('Content-type', 'application/json');
+        $this->getResponse()->setBody(json_encode($newsletterSubscribers));
+    }
 }

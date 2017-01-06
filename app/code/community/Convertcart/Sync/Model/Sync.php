@@ -8,6 +8,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
     public $page;
     public $order;
     public $debug = 0;
+    public $subscriberId=0;
 
     public function getCountData()
     {
@@ -73,37 +74,39 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
             $storeData = array();
 
             $websiteCount++;
-            $websiteData[$websiteCount]['website_id'] = $website->getId();
-            $websiteData[$websiteCount]['website_code'] = $website->getCode();
-            $websiteData[$websiteCount]['website_name'] = $website->getName();
+            $websiteData['website_id'] = $website->getId();
+            $websiteData['website_code'] = $website->getCode();
+            $websiteData['website_name'] = $website->getName();
 
             foreach ($website->getGroups() as $group) {
                 $stores = $group->getStores();
                 foreach ($stores as $store) {
                     $storeCount++;
-                    $storeData[$storeCount]['store_id'] = $store->getId();
-                    $storeData[$storeCount]['store_code'] = $store->getCode();
-                    $storeData[$storeCount]['store_name'] = $store->getName();                    
+                    $storeData['store_id'] = $store->getId();
+                    $storeData['store_code'] = $store->getCode();
+                    $storeData['store_name'] = $store->getName();                    
 
                     $allowedCurrencies = $store->getAvailableCurrencyCodes(true);
-                    $storeData[$storeCount]['base_currency'] = $store->getBaseCurrencyCode();
+                    $storeData['base_currency'] = $store->getBaseCurrencyCode();
                     if (is_array($allowedCurrencies) && count($allowedCurrencies) > 1) {
-                        $storeData[$storeCount]['allowed_currencies'] = Mage::getModel('directory/currency')->getCurrencyRates(
+                        $storeData['allowed_currencies'] = Mage::getModel('directory/currency')->getCurrencyRates(
                             $store->getBaseCurrencyCode(),
                             $allowedCurrencies
                         );
                     } else
-                        $storeData[$storeCount]['allowed_currencies'] = $allowedCurrencies;
-                    $storeData[$storeCount]['url'] = $this->getBaseUrl($store->getId());
+                        $storeData['allowed_currencies'] = $allowedCurrencies;
+                    $storeData['url'] = $this->getBaseUrl($store->getId());
+                    $allStore[] = $storeData;
                 }
             }
-            $websiteData[$websiteCount]['total_stores'] = $storeCount;
-            $websiteData[$websiteCount]['stores'] = $storeData; 
+            $websiteData['total_stores'] = $storeCount;
+            $websiteData['stores'] = $allStore; 
+            $allWebsite[] =  $websiteData;
         }
 
         $wesbites = array();
         $websites['total_websites'] = $websiteCount;
-        $websites['data'] = $websiteData;
+        $websites['data'] = $allWebsite;
 
         return $websites;
     }//getWebsites function ends
@@ -132,18 +135,18 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
     {
         $this->setParams($params);        
         $attributeSets = Mage::getModel('catalog/product_attribute_set_api')->items();
-        $attributesData['attribute_sets']['total_attribute_sets'] = count($attributeSets);
-        $attributesData['attribute_sets']['data'] = $attributeSets;
-        $attributesData['attributes'] = array();
-        $attributeSetCount = 0;
+        $attributesData['total_attribute_sets'] = count($attributeSets);
 
+        $attributesData['attribute_set'] = array();
         foreach ($attributeSets as $attributeSet) {
-            $attributeSetCount++;
             $items = Mage::getModel('catalog/product_attribute_api')->items($attributeSet['set_id']);
-            $attributesData['attributes'][$attributeSetCount]['total_attributes'] = count($items);
-            $attributesData['attributes'][$attributeSetCount]['attribute_set_id'] = $attributeSet['set_id'];
-            $attributesData['attributes'][$attributeSetCount]['name'] = $attributeSet['name'];
-            $attributesData['attributes'][$attributeSetCount]['data'] = $items;
+            $attributeData['total_attributes'] = count($items);
+            $attributeData['attribute_set_id'] = $attributeSet['set_id'];
+            $attributeData['name'] = $attributeSet['name'];
+            $attributeData['data'] = $items;
+
+            $attributesData['attribute_set'][] = $attributeData;
+
         }//foreach attributeSet ends
 
         return $attributesData;
@@ -346,6 +349,37 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         return $wishlistData;
     } //getWishlist function ends
 
+    public function getNewsletterSubscribers($params)
+    {
+        $this->setParams($params);
+
+        $collection = Mage::getModel('newsletter/subscriber')
+                    ->getCollection()
+                    ->addFieldToSelect('subscriber_id')
+                    ->addFieldToSelect('store_id')
+                    ->addFieldToSelect('customer_id')
+                    ->addFieldToSelect('subscriber_email')
+                    ->addFieldToSelect('subscriber_status')
+                    ->addFieldToFilter('subscriber_id', array('gteq' => $this->subscriberId))
+                    ->setOrder('subscriber_id', $this->order);
+
+        $collection = $collection
+                    ->setPageSize($this->limit)
+                    ->setCurPage($this->page);
+
+        $newsletterSubscribers = array();
+        foreach ($collection as $subscriber) {
+            $newsletterSubscriber['subscriber_id'] = $subscriber['subscriber_id'];
+            $newsletterSubscriber['store_id'] = $subscriber['store_id'];
+            $newsletterSubscriber['customer_id'] = $subscriber['customer_id'];
+            $newsletterSubscriber['subscriber_email'] = $subscriber['subscriber_email'];
+            $newsletterSubscriber['subscriber_status'] = $subscriber['subscriber_status'];
+
+            $newsletterSubscribers[] = $newsletterSubscriber;
+        }
+        return $newsletterSubscribers;
+    }//getNewsletterSubscribers function ends
+
     public function calculatePage()
     {
         if ($this->offset == 0)
@@ -372,6 +406,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $this->order = isset($params['order']) ? $params['order'] : 'asc';        
         $this->storeId = isset($params['storeId']) ? $params['storeId'] : 0;
         $this->debug = isset($params['debug']) ? $params['debug'] : 0;
+        $this->subscriberId = isset($params['subscriberId']) ? $params['subscriberId'] : 0;
 
         $this->debugMode();
         $this->calculatePage();
