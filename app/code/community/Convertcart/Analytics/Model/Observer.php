@@ -21,6 +21,7 @@ class Convertcart_Analytics_Model_Observer
             return;
         }
 
+
         $cc->clearData();
         foreach ($ccData as $singleEvent) {
             $singleEventData = $singleEvent['event_data'];
@@ -28,8 +29,20 @@ class Convertcart_Analytics_Model_Observer
             $singleEventData['meta_data'] = $singleEvent['meta_data'];
 
             $eventData = Mage::app()->getLayout()->createBlock('core/template')
-                              ->setEventData(json_encode($singleEventData))
-                              ->setTemplate('convertcart/event.phtml');
+                        ->addData(
+                            array(
+                                'cache_lifetime'=> null,
+                                'cache_tags' => array(
+                                    Mage_Core_Model_Store::CACHE_TAG,
+                                    Mage_Cms_Model_Block::CACHE_TAG,
+                                    'ccBlock'
+                                ),
+                                'cache_key' => 'ccEvent',
+                            )
+                        ); 
+
+            $eventData = $eventData->setEventData(json_encode($singleEventData))
+                                   ->setTemplate('convertcart/event.phtml');
             $layout->getBlock('before_body_end')->append($eventData);
         }//foreach singles_event
     }//addBlock function ends
