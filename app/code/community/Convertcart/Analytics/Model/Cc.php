@@ -46,6 +46,7 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
             return;
 
         $metaData = array();
+        $metaData['date'] = gmdate('Y-m-d H:i:s');
         if (Mage::getSingleton('customer/session')->isLoggedIn()) {
             $metaData['customer_status'] = 'logged_in';
             $customer = Mage::getSingleton('customer/session')->getCustomer();
