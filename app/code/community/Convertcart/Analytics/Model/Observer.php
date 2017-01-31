@@ -312,6 +312,7 @@ class Convertcart_Analytics_Model_Observer
             $cartItem['quantity'] = $item->getQty();
             $cartItem['id'] = $item->getProductId();
             $cartItem['sku'] = $item->getSku();
+            $cartItem['customOptions'] = Mage::getSingleton('convertcart_analytics/cc')->getCartItemOptions($item);
 
             $product = $item->getProduct();
             if (is_object($product)) {
@@ -338,10 +339,10 @@ class Convertcart_Analytics_Model_Observer
         $ccView['event_data']['subtotal'] = $cc->getValue($quote->getSubtotal());
         $ccView['event_data']['total'] = $cc->getValue($quote->getGrandTotal());
         $ccView['event_data']['base_total'] = $cc->getValue($quote->getBaseGrandTotal());
-        $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
+        $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta(1);
 
         $cc->storeData($ccView);
-    } // cartView function ends    
+    } // cartView function ends
 
     public function checkoutView($observer)
     {
@@ -374,7 +375,9 @@ class Convertcart_Analytics_Model_Observer
             $cartItem['currency'] = $currency;
             $cartItem['quantity'] = $item->getQty();
             $cartItem['id'] = $item->getProductId();
-            $cartItem['sku'] = $item->getSku();      
+            $cartItem['sku'] = $item->getSku();
+            $cartItem['customOptions'] = Mage::getSingleton('convertcart_analytics/cc')->getCartItemOptions($item);
+
             $product = $item->getProduct();
             if (is_object($product)) {
                 $cartItem['url'] = $product->getProductUrl();
@@ -400,7 +403,7 @@ class Convertcart_Analytics_Model_Observer
         $ccView['event_data']['subtotal'] = $cc->getValue($quote->getSubtotal());
         $ccView['event_data']['total'] = $cc->getValue($quote->getGrandTotal());
         $ccView['event_data']['base_total'] = $cc->getValue($quote->getBaseGrandTotal());
-        $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
+        $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta(1);
 
         $cc->storeData($ccView);
     } // checkoutView function ends    
@@ -487,8 +490,10 @@ class Convertcart_Analytics_Model_Observer
 
         if (is_object($store))
             $currency = $store->getCurrentCurrencyCode();
-        if (is_object($quoteItem))
+        if (is_object($quoteItem)) {
             $cart['quantity'] = $quoteItem->getQty();
+            $cart['customOptions'] = Mage::getSingleton('convertcart_analytics/cc')->getCartItemOptions($quoteItem);
+        }
         if (is_object($product)) {
             $cc = Mage::getModel('convertcart_analytics/cc');
             $cart['name'] = str_replace("'", "", $product->getName());
@@ -610,6 +615,7 @@ class Convertcart_Analytics_Model_Observer
             $orderItem['quantity'] = $item->getQtyOrdered();
             $orderItem['id'] = $item->getProductId();
             $orderItem['sku'] = $item->getSku();
+            $orderItem['customOptions'] = Mage::getSingleton('convertcart_analytics/cc')->getOrderItemOptions($item);
 
             $product = $item->getProduct();
             if (is_object($product)) {
@@ -641,6 +647,8 @@ class Convertcart_Analytics_Model_Observer
         $cc = Mage::getSingleton('convertcart_analytics/cc');
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("ordered");
         $ccData['event_data']['orderId'] = $order->getIncrementId();
+        $ccData['event_data']['order_email'] = $order->getCustomerEmail();
+        $ccData['event_data']['is_guest'] = $order->getCustomerIsGuest();
         $ccData['event_data']['order_count'] = $orderCount;
         $ccData['event_data']['items'] = $orderItems;
         $ccData['event_data']['coupon_code'] = $order->getCouponCode();
@@ -656,7 +664,7 @@ class Convertcart_Analytics_Model_Observer
         $ccData['event_data']['total'] = $cc->getValue($order->getGrandTotal());
         $ccData['event_data']['base_total'] = $cc->getValue($order->getBaseGrandTotal());
 
-        $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
+        $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta(1);
         $cc->storeData($ccData);
     }//ordered function ends
 

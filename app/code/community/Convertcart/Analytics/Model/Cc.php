@@ -40,51 +40,97 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         return $eventData;
     }
 
-    public function insertMeta()
+    public function insertMeta($includeCustomerInfo = 0)
     {
         if(Mage::Helper('convertcart_analytics')->isEnabled() == false)
             return;
 
         $metaData = array();
         $metaData['date'] = gmdate('Y-m-d H:i:s');
-        if (Mage::getSingleton('customer/session')->isLoggedIn()) {
-            $metaData['customer_status'] = 'logged_in';
-            $customer = Mage::getSingleton('customer/session')->getCustomer();
-            if(!is_object($customer))
+        if ($includeCustomerInfo !=0) {
+            if (Mage::getSingleton('customer/session')->isLoggedIn()) {
+                $metaData['customer_status'] = 'logged_in';
+                $customer = Mage::getSingleton('customer/session')->getCustomer();
+                if(!is_object($customer))
+                    return $metaData;
+                $metaData['customer_email'] = $customer->getEmail();
+            }
+            else
+                $metaData['customer_status'] = 'guest';
+
+            $store = Mage::app()->getStore();
+
+            if(!is_object($store))
                 return $metaData;
-            $metaData['customer_email'] = $customer->getEmail();
+
+            $metaData['current_currency'] = $store->getCurrentCurrencyCode();
+            $metaData['base_currency'] = $store->getBaseCurrencyCode();
+            $metaData['current_currency_rate'] = $store->getCurrentCurrencyRate();
+
+            $locale = Mage::app()->getLocale();
+            if(!is_object($locale))
+                $metaData['language'] = $locale->getLocaleCode();
+
+            $metaData['magento_store_code'] = $store->getCode();
+            $metaData['magento_store_id'] = $store->getId();
+
+            $website = Mage::app()->getWebsite();
+
+            if(!is_object($website))
+                return $metaData;
+
+            $metaData['magento_website_id'] = $website->getId();
+            $metaData['magento_website_code'] = $website->getCode();
         }
-        else
-            $metaData['customer_status'] = 'guest';
-
-        $store = Mage::app()->getStore();
-
-        if(!is_object($store))
-            return $metaData;
-
-        $metaData['current_currency'] = $store->getCurrentCurrencyCode();
-        $metaData['base_currency'] = $store->getBaseCurrencyCode();
-        $metaData['current_currency_rate'] = $store->getCurrentCurrencyRate();
-
-        $locale = Mage::app()->getLocale();
-        if(!is_object($locale))
-            $metaData['language'] = $locale->getLocaleCode();
-
-        $metaData['magento_store_code'] = $store->getCode();
-        $metaData['magento_store_id'] = $store->getId();
-
-        $website = Mage::app()->getWebsite();
-
-        if(!is_object($website))
-            return $metaData;
-
-        $metaData['magento_website_id'] = $website->getId();
-        $metaData['magento_website_code'] = $website->getCode();
 
         $metaData['platform'] = "Magento";
         $metaData['platform_version'] = Mage::getVersion();     
 
         return $metaData;
+    }
+
+    public function getCartItemOptions($item)
+    {
+        if(!is_object($item))
+            return null;
+
+        $helper = Mage::helper('catalog/product_configuration');
+        if(!is_object($helper))
+            return null;
+
+        $options = $helper->getCustomOptions($item);
+        $customOptions = array();
+        foreach ($options as $option) {
+            $customOption = array();
+            $customOption['label'] = $option['label'];
+            $customOption['value'] = $option['value'];
+            $customOption['option_id'] = $option['option_id'];
+            $customOption['option_type'] = $option['option_type'];
+            $customOptions[] = $customOption;
+        }
+
+        return $customOptions;
+    }
+
+    public function getOrderItemOptions($item)
+    {
+        if(!is_object($item))
+            return null;
+
+        $options = $item->getProductOptions();
+
+        $options = $options['options'];
+        $customOptions = array();
+        foreach ($options as $option) {
+            $customOption = array();
+            $customOption['label'] = $option['label'];
+            $customOption['value'] = $option['value'];
+            $customOption['option_id'] = $option['option_id'];
+            $customOption['option_type'] = $option['option_type'];
+            $customOptions[] = $customOption;
+        }
+
+        return $customOptions;
     }
 
     public function getWishlistItems()
