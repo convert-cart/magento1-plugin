@@ -547,53 +547,6 @@ class Convertcart_Analytics_Model_Observer
         $cc->storeData($ccData);
     }//removeFromCart function ends
 
-    public function updateCart()
-    {
-        $quote = Mage::getSingleton('checkout/session')->getQuote();
-        $store = Mage::app()->getStore();
-        if(is_object($store))
-            $currency = $store->getCurrentCurrencyCode();
-
-        $cartItems = $quote->getAllVisibleItems();
-        $cart = array();
-        $cc = Mage::getModel('convertcart_analytics/cc');
-
-        foreach ($cartItems as $item) {
-            $cartItem = array();
-            $cartItem['name'] = str_replace("'", "", $item->getName());
-            $cartItem['price'] = $cc->getPrice($item->getPrice());
-            $cartItem['currency'] = $currency;            
-            $cartItem['quantity'] = $item->getQty();
-            $cartItem['id'] = $item->getProductId();
-            $cartItem['sku'] = $item->getSku();      
-            $product = $item->getProduct();
-            if (is_object($product)) {
-                $cartItem['url'] = $product->getProductUrl();
-            }
-            $resource = Mage::getSingleton('catalog/product')->getResource();
-
-            if (is_object($resource)) {
-                $resource = Mage::getSingleton('catalog/product')->getResource();
-                if(is_object($store))
-                    $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
-                if($imagePath != null and $imagePath != "no_selection")
-                    $cartItem['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
-            }
-
-            $cart[] = $cartItem;
-        }
-
-        $cc = Mage::getSingleton('convertcart_analytics/cc');  
-        $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("updateCart");
-        $ccData['event_data']['items'] = $cart;
-        $ccData['event_data']['currency'] = $currency;
-        $ccData['event_data']['coupon_code'] = $quote->getCouponCode();
-
-        $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-        $cc->storeData($ccData);
-    }//updateCart function ends
-
     public function ordered($observer)
     {
         $orderId = $observer->getData('order_ids');
