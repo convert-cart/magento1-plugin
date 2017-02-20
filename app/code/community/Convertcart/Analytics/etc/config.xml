@@ -1,7 +1,7 @@
 <config>
     <modules>
         <Convertcart_Analytics>
-            <version>1.2.5</version>
+            <version>1.2.7</version>
         </Convertcart_Analytics>
     </modules>
     <frontend>
@@ -146,16 +146,6 @@
                 </observers>                    
             </sales_quote_remove_item>
 
-            <checkout_cart_update_items_after>
-                <observers>
-                    <convertcart_analytics_addtocart>
-                        <type>singleton</type>
-                        <class>Convertcart_Analytics_Model_Observer</class>
-                        <method>updateCart</method>
-                    </convertcart_analytics_addtocart>            
-                </observers>          
-            </checkout_cart_update_items_after>
-
             <checkout_onepage_controller_success_action>
                 <observers>
                     <convertcart_analytics_ordered>
@@ -165,16 +155,6 @@
                     </convertcart_analytics_ordered>
                 </observers>  
             </checkout_onepage_controller_success_action>
-
-            <catalog_block_product_list_collection>
-                <observers>
-                    <convertcart_analytics_modifyCategory>
-                        <type>singleton</type>
-                        <class>Convertcart_Analytics_Model_Observer</class>
-                        <method>modifyCategory</method>
-                    </convertcart_analytics_modifyCategory>
-                </observers>  
-            </catalog_block_product_list_collection>
 
             <wishlist_add_product>
                 <observers>
