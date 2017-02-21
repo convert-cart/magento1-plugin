@@ -350,8 +350,9 @@ class Convertcart_Analytics_Model_Observer
         if (!$action) {
             return;
         }
-        
-        if (!in_array($action->getFullActionName(), array('checkout_onepage_index')) and !in_array($action->getFullActionName(), array('onepagecheckout_index_index'))) {
+
+        $checkoutActionNames = array('onepagecheckout_index_index', 'checkout_onepage_index', 'onestepcheckout_index_index');
+        if (!in_array($action->getFullActionName(), $checkoutActionNames)) {
             return;
         }
 
