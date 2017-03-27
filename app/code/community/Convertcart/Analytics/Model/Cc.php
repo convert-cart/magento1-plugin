@@ -99,13 +99,14 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
             return null;
 
         $options = $helper->getCustomOptions($item);
+
         $customOptions = array();
         foreach ($options as $option) {
             $customOption = array();
-            $customOption['label'] = $option['label'];
-            $customOption['value'] = $option['value'];
-            $customOption['option_id'] = $option['option_id'];
-            $customOption['option_type'] = $option['option_type'];
+            $customOption['label'] = isset($option['label']) ? $option['label'] : null;
+            $customOption['value'] = isset($option['value']) ? $option['value'] : null;
+            $customOption['option_id'] = isset($option['option_id']) ? $option['option_id'] : null;
+            $customOption['option_type'] = isset($option['option_type']) ? $option['option_type'] : null;
             $customOptions[] = $customOption;
         }
 
@@ -118,15 +119,15 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
             return null;
 
         $options = $item->getProductOptions();
+        $options = isset($options['options']) ? $options['options'] : null;
 
-        $options = $options['options'];
         $customOptions = array();
         foreach ($options as $option) {
             $customOption = array();
-            $customOption['label'] = $option['label'];
-            $customOption['value'] = $option['value'];
-            $customOption['option_id'] = $option['option_id'];
-            $customOption['option_type'] = $option['option_type'];
+            $customOption['label'] = isset($option['label']) ? $option['label'] : null;
+            $customOption['value'] = isset($option['value']) ? $option['value'] : null;
+            $customOption['option_id'] = isset($option['option_id']) ? $option['option_id'] : null;
+            $customOption['option_type'] = isset($option['option_type']) ? $option['option_type'] : null;
             $customOptions[] = $customOption;
         }
 
@@ -246,6 +247,9 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
 
     public function getPrice($price)
     {
+        if (!isset($price))
+            return 0;
+
         return Mage::helper('core')->currency($price, false, false);
     }
 
