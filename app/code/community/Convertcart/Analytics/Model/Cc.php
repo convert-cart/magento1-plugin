@@ -99,6 +99,8 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
             return null;
 
         $options = $helper->getCustomOptions($item);
+        if (!isset($options) || empty($options))
+            return null;
 
         $customOptions = array();
         foreach ($options as $option) {
@@ -119,8 +121,10 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
             return null;
 
         $options = $item->getProductOptions();
-        $options = isset($options['options']) ? $options['options'] : null;
+        if (!isset($options['options']) || empty($options['options']))
+            return null;
 
+        $options = $options['options'];
         $customOptions = array();
         foreach ($options as $option) {
             $customOption = array();
