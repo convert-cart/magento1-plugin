@@ -105,7 +105,7 @@ class Convertcart_Sync_Model_Find extends Mage_Core_Model_Session_Abstract
         if (!is_object($category)) {
             return null;
         }
-
+        $category->setStoreId($this->storeId);
         $categoryData = array();
         $categoryData['category_id'] = $category->getId();
         $categoryData['name']        = $category->getData('name');
