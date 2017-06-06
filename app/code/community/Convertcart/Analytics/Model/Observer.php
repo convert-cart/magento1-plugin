@@ -617,6 +617,8 @@ class Convertcart_Analytics_Model_Observer
         $ccView['event_data']['subtotal'] = $cc->getValue($order->getSubtotal());
         $ccData['event_data']['total'] = $cc->getValue($order->getGrandTotal());
         $ccData['event_data']['base_total'] = $cc->getValue($order->getBaseGrandTotal());
+        $ccData['event_data']['total_due'] = $cc->getValue($order->getTotalDue());
+        $ccData['event_data']['base_total_due'] = $cc->getValue($order->getBaseTotalDue());
 
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta(1);
         $cc->storeData($ccData);
