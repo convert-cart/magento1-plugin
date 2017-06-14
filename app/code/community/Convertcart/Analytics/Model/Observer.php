@@ -169,7 +169,6 @@ class Convertcart_Analytics_Model_Observer
 
         $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
         if (is_object($stock)) {
-            $productData['stock_quantity'] = $stock->getQty();
             $productData['is_in_stock'] = $stock->getIsInStock();
         }
 
