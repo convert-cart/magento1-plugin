@@ -1,7 +1,7 @@
 <config>
     <modules>
         <Convertcart_Sync>
-            <version>1.0.9</version>
+            <version>1.1.0</version>
         </Convertcart_Sync>
     </modules>
     <frontend>
