@@ -82,6 +82,8 @@ class Convertcart_Sync_Model_Find extends Mage_Core_Model_Session_Abstract
         }//foreach attributes ends
 
         $productData['category_ids'] = $product->getCategoryIds();
+        $productData['childProductIds'] = $this->getChildProductIds($product);
+
         $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
         $productData['stock_data'] = $stock->getData();
         $productData['store_url'] = $product->getProductUrl();
@@ -130,6 +132,51 @@ class Convertcart_Sync_Model_Find extends Mage_Core_Model_Session_Abstract
 
         return $categoryData;
     }// getCategory function ends
+
+    public function getChildProductIds($parentProduct)
+    {
+        $childProductIds = array();
+        if (!is_object($parentProduct)) {
+            return $childProductIds;
+        }
+
+        $productTypeId = $parentProduct->getTypeId();
+        if (($productTypeId == "grouped" or $productTypeId == "bundle") or $productTypeId == "configurable") {
+            $ids = $parentProduct->getTypeInstance()
+                    ->getChildrenIds($parentProduct->getId());
+            foreach ($ids as $optionId => $children) {
+                foreach ($children as $id => $childId) {
+                    $childProductIds[$optionId][] = $childId;
+                }
+            }
+        }
+
+        return $childProductIds;
+    }
+
+    public function getParentProductIds($childProduct)
+    {
+        $parentProductIds = array();
+        if (!is_object($childProduct)) {
+            return $parentProductIds;
+        }
+
+        if ($childProduct->getTypeId() == "simple") {
+            $parentIds = Mage::getModel('catalog/product_type_grouped')->getParentIdsByChild($childProduct->getId());
+            if (!$parentIds) {
+                $parentIds = Mage::getModel('catalog/product_type_configurable')->getParentIdsByChild($childProduct->getId());
+                if (!$parentIds) {
+                    $parentIds = Mage::getModel('bundle/product_type')->getParentIdsByChild($childProduct->getId());
+                }
+            }
+            if (isset($parentIds[0])) {
+                $parentProductIds = $parentIds;
+            }
+        }
+
+        return $parentProductIds;
+    }
+
 
     public function debugMode()
     {

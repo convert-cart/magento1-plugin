@@ -242,8 +242,10 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
                     $productData[$p][$attributeCode] = $product->getData($attributeCode);
                 }
             }//foreach attributes ends
-            
+
             $productData[$p]['category_ids'] = $product->getCategoryIds();
+            $productData[$p]['childProductIds'] = Mage::getSingleton('convertcart_sync/find')->getChildProductIds($product);
+
             $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
             $productData[$p]['stock_data'] = $stock->getData();
             $productData[$p]['store_url'] = $product->getProductUrl();
