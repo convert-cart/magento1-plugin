@@ -1,26 +1,17 @@
 <?php
 class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 {
-    public $updatedAt;
-    public $limit;
-    public $offset;
-    public $storeId;
-    public $page;
-    public $order;
-    public $debug = 0;
-    public $subscriberId=0;
-
-    public function getCountData()
+    public function getStoreInfo()
     {
-        $this->setParams($params);        
-        $countData = array();
+        $storeInfo = array();
+        $storeInfo['websites']  = $this->getWebsitesData();
+        $storeInfo['products']  = $this->getProductCount();
+        $storeInfo['customers'] = $this->getCustomerCount();
+        $storeInfo['orders'] = $this->getOrderCount();
 
-        $countData['websites']  = $this->getWebsitesData();
-        $countData['products']  = $this->getProductCount();
-        $countData['customers'] = $this->getCustomerCount();
-        $countData['orders'] = $this->getOrderCount();
+        $storeInfo['moduleVersion'] = Mage::Helper('convertcart_sync')->getModuleVersion();
 
-        return $countData;
+        return $storeInfo;
     }
 
     public function getCustomerCount()
@@ -72,6 +63,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         foreach (Mage::app()->getWebsites() as $website) {
             $storeCount = 0;
             $storeData = array();
+            $allStore = array();
 
             $websiteCount++;
             $websiteData['website_id'] = $website->getId();
@@ -133,7 +125,6 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
     public function getAttributes()
     {
-        $this->setParams($params);        
         $attributeSets = Mage::getModel('catalog/product_attribute_set_api')->items();
         $attributesData['total_attribute_sets'] = count($attributeSets);
 
@@ -154,18 +145,19 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
     public function getCustomers($params)
     {
-        $this->setParams($params);
+        $ccModel = Mage::getSingleton('convertcart_sync/cc');
+        $ccModel->setParams($params);
         $customers = Mage::getModel('customer/customer')
                     ->getCollection()
-                    ->addAttributeToSort('updated_at', $this->order)
+                    ->addAttributeToSort('updated_at', $ccModel->order)
                     ->addAttributeToSelect('id')
                     ->addAttributeToSelect('email')
                     ->addAttributeToSelect('updated_at')
-                    ->addAttributeToFilter('updated_at', array('gteq' =>$this->updatedAt));
+                    ->addAttributeToFilter('updated_at', array('gteq' =>$ccModel->updatedAt));
 
         $customers = $customers
-                    ->setPageSize($this->limit)
-                    ->setCurPage($this->page);
+                    ->setPageSize($ccModel->limit)
+                    ->setCurPage($ccModel->page);
 
         $c=0;
         $customerData = array();
@@ -187,18 +179,20 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
     public function getOrders($params)
     {
-        $this->setParams($params);
+        $ccModel = Mage::getSingleton('convertcart_sync/cc');
+        $ccModel->setParams($params);
+
         $orders = Mage::getModel('sales/order')
                 ->getCollection()
-                ->addAttributeToSort('updated_at', $this->order)
+                ->addAttributeToSort('updated_at', $ccModel->order)
                 ->addAttributeToSelect('entity_id')
                 ->addAttributeToSelect('increment_id')
                 ->addAttributeToSelect('updated_at')
-                ->addAttributeToFilter('updated_at', array('gteq' =>$this->updatedAt));
+                ->addAttributeToFilter('updated_at', array('gteq' =>$ccModel->updatedAt));
 
         $orders = $orders
-                ->setPageSize($this->limit)
-                ->setCurPage($this->page);
+                ->setPageSize($ccModel->limit)
+                ->setCurPage($ccModel->page);
 
         $orderData = array();
         foreach ($orders as $order) {
@@ -210,48 +204,24 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
     public function getProducts($params)
     {
-        $this->setParams($params);
+        $ccModel = Mage::getSingleton('convertcart_sync/cc');
+        $ccModel->setParams($params);
 
         $products = Mage::getModel('catalog/product')
                     ->getCollection()
-                    ->setStoreId($this->storeId)
-                    ->addAttributeToSort('updated_at', $this->order)
+                    ->setStoreId($ccModel->storeId)
+                    ->addAttributeToSort('updated_at', $ccModel->order)
                     ->addAttributeToSelect('*')
-                    ->addAttributeToFilter('updated_at', array('gteq' => $this->updatedAt));
+                    ->addAttributeToFilter('updated_at', array('gteq' => $ccModel->updatedAt));
 
         $products = $products
-                    ->setPageSize($this->limit)
-                    ->setCurPage($this->page);
+                    ->setPageSize($ccModel->limit)
+                    ->setCurPage($ccModel->page);
 
         $productData = array();
         $p=0;
         foreach ($products as $product) {
-            // loading model again is not optimal approach, but unable to get attribute in specific stores in a magento install
-            // $product = Mage::getModel('catalog/product')
-            //             ->setStoreId($this->storeId)
-            //             ->load($_product->getId());
-            // $productData[$p] = Mage::getModel('catalog/product_api')->info($product->getId(), $this->storeId);
-
-            $attributes = $product->getAttributes();
-            foreach ($attributes as $attribute) {
-                $attributeCode = $attribute->getAttributeCode();
-                $frontendInput = $attribute->getFrontendInput();
-                if ($frontendInput == 'multiselect' or $frontendInput == 'select') {
-                    $productData[$p][$attributeCode] = $product->getAttributeText($attributeCode);
-                } else {
-                    $productData[$p][$attributeCode] = $product->getData($attributeCode);
-                }
-            }//foreach attributes ends
-
-            $productData[$p]['category_ids'] = $product->getCategoryIds();
-            $productData[$p]['childProductIds'] = Mage::getSingleton('convertcart_sync/find')->getChildProductIds($product);
-
-            $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
-            $productData[$p]['stock_data'] = $stock->getData();
-            $productData[$p]['store_url'] = $product->getProductUrl();
-            $productData[$p]['url'] = Mage::app()->getStore($this->storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK).$product->getUrlPath();
-            $productData[$p]['image_url'] = Mage::app()->getStore($this->storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $product->getImage();
-            $productData[$p]['store_ids'] = $product->getStoreIds();
+            $productData[$p] = $ccModel->getProductData($product);
             $p++;
         }
         return $productData;
@@ -260,8 +230,10 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
     public function getCategories($params)
     {
-        $this->setParams($params);
-        $rootid     = Mage::app()->getStore($this->storeId)->getRootCategoryId();
+        $ccModel = Mage::getSingleton('convertcart_sync/cc');
+        $ccModel->setParams($params);
+
+        $rootid     = Mage::app()->getStore($ccModel->storeId)->getRootCategoryId();
         $categories = Mage::getModel('convertcart_sync/category')
                     ->load($rootid)
                     ->getCollection()
@@ -269,53 +241,33 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
                     ->addFieldToFilter('path', array('like'=> "1/$rootid%"));
 
         $categories = $categories
-                    ->addAttributeToSort('updated_at', $this->order)
-                    ->addAttributeToFilter('updated_at', array('gteq' =>$this->updatedAt))
-                    ->setPageSize($this->limit)
-                    ->setCurPage($this->page)
-                    ->setStoreId($this->storeId);
+                    ->addAttributeToSort('updated_at', $ccModel->order)
+                    ->addAttributeToFilter('updated_at', array('gteq' =>$ccModel->updatedAt))
+                    ->setPageSize($ccModel->limit)
+                    ->setCurPage($ccModel->page)
+                    ->setStoreId($ccModel->storeId);
 
         $categoryData = array();
-        foreach ($categories as $category) {            
-            $cat = array();
-            $cat['category_id'] = $category->getId();
-            $cat['name']        = $category->getData('name');
-            $cat['description'] = $category->getData('description');
-            $cat['url_key']     = $category->getData('url_key');
-            $cat['url']         = Mage::app()->getStore($this->storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK).$category->getData('url_path');
-            $cat['image']       = $category->getData('image');
-
-            $cat['meta_title']       = $category->getData('meta_title');
-            $cat['meta_keywords']    = $category->getData('meta_keywords');
-            $cat['meta_description'] = $category->getData('meta_description');
-
-            $cat['is_active']   = $category->getData('is_active');
-            $cat['position']    = $category->getData('position');
-            $cat['level']       = $category->getData('level');
-            $cat['parent_id']   = $category->getData('parent_id');
-            $cat['path']        = $category->getData('path');
-            $cat['include_in_menu'] = $category->getData('include_in_menu');
-
-            $cat['created_at']  = $category->getData('created_at');
-            $cat['updated_at']  = $category->getData('updated_at');
-
-            $categoryData[] = $cat;
+        foreach ($categories as $category) {
+            $categoryData[] = $ccModel->getCategoryData($category);
         }
+
         return $categoryData;
     }// getCategories function ends
 
     public function getWishlist($params)
     {
-        $this->setParams($params);
+        $ccModel = Mage::getSingleton('convertcart_sync/cc');
+        $ccModel->setParams($params);
         
         $wishlistCollection = Mage::getModel("wishlist/wishlist")
                             ->getCollection()
-                            ->addFieldToFilter('updated_at', array('gteq' =>$this->updatedAt))
-                            ->setOrder('updated_at', $this->order);
+                            ->addFieldToFilter('updated_at', array('gteq' =>$ccModel->updatedAt))
+                            ->setOrder('updated_at', $ccModel->order);
 
         $wishlistCollection = $wishlistCollection
-                            ->setPageSize($this->limit)
-                            ->setCurPage($this->page);
+                            ->setPageSize($ccModel->limit)
+                            ->setCurPage($ccModel->page);
 
         $wishlistData = array();
         $i=0;
@@ -354,7 +306,8 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
     public function getNewsletterSubscribers($params)
     {
-        $this->setParams($params);
+        $ccModel = Mage::getSingleton('convertcart_sync/cc');
+        $ccModel->setParams($params);
 
         $collection = Mage::getModel('newsletter/subscriber')
                     ->getCollection()
@@ -363,12 +316,12 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
                     ->addFieldToSelect('customer_id')
                     ->addFieldToSelect('subscriber_email')
                     ->addFieldToSelect('subscriber_status')
-                    ->addFieldToFilter('subscriber_id', array('gteq' => $this->subscriberId))
-                    ->setOrder('subscriber_id', $this->order);
+                    ->addFieldToFilter('subscriber_id', array('gteq' => $ccModel->subscriberId))
+                    ->setOrder('subscriber_id', $ccModel->order);
 
         $collection = $collection
-                    ->setPageSize($this->limit)
-                    ->setCurPage($this->page);
+                    ->setPageSize($ccModel->limit)
+                    ->setCurPage($ccModel->page);
 
         $newsletterSubscribers = array();
         foreach ($collection as $subscriber) {
@@ -382,47 +335,4 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         }
         return $newsletterSubscribers;
     }//getNewsletterSubscribers function ends
-
-    public function calculatePage()
-    {
-        if ($this->offset == 0)
-            $this->page = 1;
-        else
-            $this->page = number_format(floor($this->offset/$this->limit) + 1);
-    }//calculatePage function ends
-
-    public function debugMode()
-    {
-        if ($this->debug == 1) {
-            error_reporting(E_ALL);
-            ini_set('display_errors', 1);
-            Mage::setIsDeveloperMode(true);
-        }
-    }
-
-    public function setParams($params)
-    {
-        $this->updatedAt = isset($params['updatedAt']) ? str_ireplace("T", " ", $params['updatedAt']) : '2011-07-29 00:00:00';
-        // $this->updatedAt = isset($params['updatedAt']) ? date("Y-m-d h:i:s", $params['updatedAt']/1000) : '2011-07-29 00:00:00';
-        $this->limit = isset($params['limit']) ? $params['limit'] : 5;
-        $this->offset = isset($params['offset']) ? $params['offset'] : 0;
-        $this->order = isset($params['order']) ? $params['order'] : 'asc';        
-        $this->storeId = isset($params['storeId']) ? $params['storeId'] : 0;
-        $this->debug = isset($params['debug']) ? $params['debug'] : 0;
-        $this->subscriberId = isset($params['subscriberId']) ? $params['subscriberId'] : 0;
-
-        $this->debugMode();
-        $this->calculatePage();
-    }
-
-    public function getParams()
-    {
-        $request = Mage::app()->getRequest();
-        if ($request)
-            $params = $request->getParams();
-        else
-            $params = null;
-
-        return $params;        
-    }
 }

@@ -9,7 +9,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
 
     public function storeAction()
     {
-        $countData = Mage::getModel('convertcart_sync/sync')->getCountData();
+        $countData = Mage::getModel('convertcart_sync/sync')->getStoreInfo();
 
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($countData));
@@ -33,7 +33,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             return;
         }
 
-        $params = Mage::getModel('convertcart_sync/sync')->getParams();
+        $params = Mage::getModel('convertcart_sync/cc')->getParams();
         $customerData = Mage::getModel('convertcart_sync/sync')->getCustomers($params);        
 
         $this->getResponse()->setHeader('Content-type', 'application/json');
@@ -46,7 +46,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             return;
         }
 
-        $params = Mage::getModel('convertcart_sync/sync')->getParams();
+        $params = Mage::getModel('convertcart_sync/cc')->getParams();
         $orderData = Mage::getModel('convertcart_sync/sync')->getOrders($params);
 
         $this->getResponse()->setHeader('Content-type', 'application/json');
@@ -59,7 +59,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             return;
         }
 
-        $params = Mage::getModel('convertcart_sync/sync')->getParams();
+        $params = Mage::getModel('convertcart_sync/cc')->getParams();
         $productData = Mage::getModel('convertcart_sync/sync')->getProducts($params);
 
         $this->getResponse()->setHeader('Content-type', 'application/json');
@@ -72,7 +72,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             return;
         }
 
-        $params = Mage::getModel('convertcart_sync/sync')->getParams();
+        $params = Mage::getModel('convertcart_sync/cc')->getParams();
         $categoryData = Mage::getModel('convertcart_sync/sync')->getCategories($params);
 
         $this->getResponse()->setHeader('Content-type', 'application/json');
@@ -85,7 +85,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             return;
         }
 
-        $params = Mage::getModel('convertcart_sync/sync')->getParams();
+        $params = Mage::getModel('convertcart_sync/cc')->getParams();
         $wishlistData = Mage::getModel('convertcart_sync/sync')->getWishlist($params);
 
         $this->getResponse()->setHeader('Content-type', 'application/json');
@@ -98,7 +98,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             return;
         }
 
-        $params = Mage::getModel('convertcart_sync/sync')->getParams(); 
+        $params = Mage::getModel('convertcart_sync/cc')->getParams(); 
         $newsletterSubscribers = Mage::getModel('convertcart_sync/sync')->getNewsletterSubscribers($params);
 
         $this->getResponse()->setHeader('Content-type', 'application/json');

@@ -113,4 +113,20 @@ class Convertcart_Sync_Helper_Data extends Mage_Core_Helper_Abstract
             ->sendResponse();
         exit;
     }
+
+    public function getModuleVersion()
+    {
+        $config = Mage::getConfig();
+        if (!is_object($config)) {
+            return null;
+        }
+
+        $node = $config->getNode();
+        if (!is_object($node)) {
+            return null;
+        }
+
+        $version = (string)$node->modules->Convertcart_Sync->version;
+        return $version;
+    }
 }
