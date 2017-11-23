@@ -52,4 +52,24 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
         else
             return $clientKey;
     }
+
+    public function getModuleVersion()
+    {
+        $config = Mage::getConfig();
+        if (!is_object($config)) {
+            return null;
+        }
+
+        $node = $config->getNode();
+        if (!is_object($node)) {
+            return null;
+        }
+
+        $module = $node->modules;
+        if (!is_object($module)) {
+            return null;
+        }
+
+        return (string)$module->{'Convertcart_Analytics'}->version;
+    }
 }

@@ -83,6 +83,8 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
             $metaData['magento_website_code'] = $website->getCode();
         }
 
+        // maintianing plugin_version nomenclature across all plugins
+        $metaData['plugin_version'] = Mage::Helper('convertcart_analytics')->getModuleVersion();
         $metaData['platform'] = "Magento";
         $metaData['platform_version'] = Mage::getVersion();     
 
