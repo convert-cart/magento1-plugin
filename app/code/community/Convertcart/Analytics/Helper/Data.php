@@ -72,4 +72,9 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
 
         return (string)$module->{'Convertcart_Analytics'}->version;
     }
+
+    public function sanitizeParam($param)
+    {
+        return strip_tags($param);
+    }
 }

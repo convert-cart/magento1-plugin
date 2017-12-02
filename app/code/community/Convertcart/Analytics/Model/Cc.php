@@ -96,11 +96,16 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         if(!is_object($item))
             return null;
 
-        $helper = Mage::helper('catalog/product_configuration');
-        if(!is_object($helper))
+        $product = $item->getProduct();
+        if (!is_object($product))
             return null;
 
-        $options = $helper->getCustomOptions($item);
+        $productInstance = $product->getTypeInstance(true);
+        if (!is_object($productInstance))
+            return null;
+
+        $productOptions = $productInstance->getOrderOptions($product);
+        $options = isset($productOptions['options']) ? $productOptions['options'] : null;
         if (!isset($options) || empty($options))
             return null;
 

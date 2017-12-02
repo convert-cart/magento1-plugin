@@ -120,14 +120,7 @@ class Convertcart_Analytics_Model_Observer
         if (!$action) { 
             return; 
         }
-        
-        $request = $action->getRequest();
-        if (!$request) { 
-            return; 
-        }
-        
-        $params = $request->getParams();
-        
+
         if (!in_array($action->getFullActionName(), array('catalog_product_view'))) {
             return;
         }
@@ -198,7 +191,6 @@ class Convertcart_Analytics_Model_Observer
 
         $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("productView");
         $ccView['event_data'] = $productData;
-        $ccView['event_data']['params'] = $params;    
         $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');         
@@ -211,13 +203,6 @@ class Convertcart_Analytics_Model_Observer
         if (!$action) {
             return; 
         }
-        
-        $request = $action->getRequest();
-        if (!$request) {
-            return; 
-        }
-        
-        $params = $request->getParams();
 
         if (!in_array($action->getFullActionName(), array('catalog_category_view'))) {
             return;
@@ -228,8 +213,6 @@ class Convertcart_Analytics_Model_Observer
 
         $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("categoryView");
 
-        $ccView['event_data']['params'] = $params;
-
         if ($toolbar) {
             $ccView['event_data']['sort_by'] = $toolbar->getCurrentOrder()." - ".$toolbar->getCurrentDirection();
             $ccView['event_data']['current_mode'] = $toolbar->getCurrentMode();
@@ -239,9 +222,7 @@ class Convertcart_Analytics_Model_Observer
             $ccView['event_data']['name'] = $category->getName();
             $ccView['event_data']['id'] = $category->getId();
             $ccView['event_data']['url'] = $category->getUrl();            
-        }
-        elseif(isset($params['id']))
-            $ccView['event_data']['id'] = $params['id'];   
+        } 
 
         $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
@@ -268,12 +249,12 @@ class Convertcart_Analytics_Model_Observer
 
         //in some themes / modules above approach doesnt work..
 
+        $ccHelper = Mage::Helper('convertcart_analytics');
         if (!$ccView['event_data']['query'] and $params) {
-            $ccView['event_data']['query'] = $params['q'];
+            $ccView['event_data']['query'] = $ccHelper->sanitizeParam($params['q']);
         }
-        $ccView['event_data']['params'] = $params;
 
-        $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("searchView");
+        $ccView['event_type'] = $ccHelper->getEventType("searchView");
         $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
         $cc = Mage::getSingleton('convertcart_analytics/cc');         
         $cc->storeData($ccView);
@@ -653,13 +634,7 @@ class Convertcart_Analytics_Model_Observer
         if (!$action) {
             return; 
         }
-        
-        $request = $action->getRequest();
-        if (!$request) { 
-            return; 
-        }
-        
-        $params = $request->getParams();        
+
         if (!in_array($action->getFullActionName(), array('wishlist_index_index'))) {
             return;
         }
@@ -763,7 +738,7 @@ class Convertcart_Analytics_Model_Observer
     public function couponInfo($observer)
     {
         $quote = Mage::getSingleton('checkout/session')->getQuote();
-        $couponcode = $quote->getData('coupon_code');
+        $couponcode = $quote->getData('coupon_code'); //getting applied coupon from cart, if any
 
         $request = Mage::app()->getRequest();
         if ($request) {
@@ -772,13 +747,13 @@ class Convertcart_Analytics_Model_Observer
 
         if($params['remove'] == 1)
             $status = "couponRemoved";
-        elseif($couponcode == $params['coupon_code'])
+        elseif($couponcode == $params['coupon_code']) 
             $status = "couponApplied";
         elseif($couponcode == '' or !$couponcode)
             $status = "couponDenied";        
 
         $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType($status);
-        $ccData['event_data']['coupon_code'] = $params['coupon_code'];
+        $ccData['event_data']['coupon_code'] = $couponcode;
         $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
         $cc = Mage::getSingleton('convertcart_analytics/cc');  
