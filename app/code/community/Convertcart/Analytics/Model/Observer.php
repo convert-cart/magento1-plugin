@@ -241,15 +241,14 @@ class Convertcart_Analytics_Model_Observer
                 return;
         }
 
+        $ccHelper = Mage::Helper('convertcart_analytics');
         $query = $observer->getDataObject();
         if ($query) {
-            $ccView['event_data']['query'] = $query->getQueryText();
+            $ccView['event_data']['query'] = $ccHelper->sanitizeParam($query->getQueryText());
             $ccView['event_data']['items_count'] = $query->getNumResults();
         }
 
         //in some themes / modules above approach doesnt work..
-
-        $ccHelper = Mage::Helper('convertcart_analytics');
         if (!$ccView['event_data']['query'] and $params) {
             $ccView['event_data']['query'] = $ccHelper->sanitizeParam($params['q']);
         }
