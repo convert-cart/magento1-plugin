@@ -114,6 +114,28 @@ class Convertcart_Sync_Helper_Data extends Mage_Core_Helper_Abstract
         exit;
     }
 
+    public function sendErrorResponse($errorMessage = 'Some Error Occurred')
+    {
+        $response = array('error' => $errorMessage);
+        Mage::app()->getResponse()
+            ->setHeader('HTTP/1.1', '500 Internal Server Error')
+            ->setHeader('Content-type', 'application/json')
+            ->setBody(json_encode($response))
+            ->sendResponse();
+        exit;
+    }
+
+    public function sendSuccessResponse($data = array())
+    {
+        $response['success'] = true;
+        $response['data'] = $data;
+        Mage::app()->getResponse()
+            ->setHeader('Content-type', 'application/json')
+            ->setBody(json_encode($response))
+            ->sendResponse();
+        exit;
+    }
+
     public function getModuleVersion()
     {
         $config = Mage::getConfig();

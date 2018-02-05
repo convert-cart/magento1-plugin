@@ -1,7 +1,7 @@
 <config>
     <modules>
         <Convertcart_Sync>
-            <version>1.1.1</version>
+            <version>1.1.2</version>
         </Convertcart_Sync>
     </modules>
     <frontend>
@@ -19,8 +19,24 @@
         <models>
           <convertcart_sync>
               <class>Convertcart_Sync_Model</class>
+              <resourceModel>convertcart_sync_resource</resourceModel>
           </convertcart_sync>
+            <convertcart_sync_resource>
+                <class>Convertcart_Sync_Model_Resource</class>
+                <entities>
+                    <activity>
+                        <table>convertcart_sync_activity</table>
+                    </activity>
+                </entities>
+            </convertcart_sync_resource>
         </models>
+        <resources>
+            <convertcart_sync_setup>
+                <setup>
+                    <module>Convertcart_Sync</module>
+                </setup>
+            </convertcart_sync_setup>
+        </resources>
         <helpers>
           <convertcart_sync>
               <class>Convertcart_Sync_Helper</class>
@@ -60,6 +76,26 @@
                     </convertcart_sync_enabled>
                 </observers>
             </controller_action_predispatch>
+
+            <catalog_product_delete_before>
+                <observers>
+                    <convertcart_sync_product_delete>
+                        <type>singleton</type>
+                        <class>Convertcart_Sync_Model_Observer</class>
+                        <method>productDeleted</method>
+                    </convertcart_sync_product_delete>
+                </observers>
+            </catalog_product_delete_before>
+
+            <catalog_category_delete_before>
+                <observers>
+                    <convertcart_sync_category_delete>
+                        <type>singleton</type>
+                        <class>Convertcart_Sync_Model_Observer</class>
+                        <method>categoryDeleted</method>
+                    </convertcart_sync_category_delete>
+                </observers>
+            </catalog_category_delete_before>
         </events>        
         <acl>
             <resources>

@@ -31,7 +31,7 @@ class Convertcart_Sync_FindController extends Mage_Core_Controller_Front_Action
 
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($orderData));
-    }//orderAction ends	
+    }//orderAction ends
 
     public function catalogAction()
     {
