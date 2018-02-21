@@ -22,6 +22,8 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
         if ($this->queryMethod == 'custom') {
             $product->setStoreId($this->storeId);
             $attributes = $product->getAttributes();
+            $productData['product_id'] = $product->getId();
+
             foreach ($attributes as $attribute) {
                 $attributeCode = $attribute->getAttributeCode();
                 $frontendInput = $attribute->getFrontendInput();
@@ -39,10 +41,12 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
             $productData['stock_data'] = $stock->getData();
             $productData['store_url'] = $product->getProductUrl();
             $productData['url'] = Mage::app()->getStore($this->storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK).$product->getUrlPath();
-            $productData['image_url'] = Mage::app()->getStore($this->storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $product->getImage();
+            if (!empty($product->getImage()) and $product->getImage() != 'no_selection') {
+                $productData['image_url'] = Mage::app()->getStore($this->storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $product->getImage();
+            }
             $productData['store_ids'] = $product->getStoreIds();
         } elseif ($this->queryMethod == 'api') { //not reliable in some magento installs/environment
-            // loading model again is not optimal approach, 
+            // loading model again is not optimal approach,
             // but unable to get attribute in specific stores in a particular magento install/version/environment
             $productData = Mage::getModel('catalog/product_api')->info($product->getId(), $this->storeId);
         }

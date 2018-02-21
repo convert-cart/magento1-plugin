@@ -6,9 +6,10 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $storeInfo = array();
         $storeInfo['websites']  = $this->getWebsitesData();
         $storeInfo['products']  = $this->getProductCount();
+        $storeInfo['category']  = $this->getCategoryCount();
         $storeInfo['customers'] = $this->getCustomerCount();
         $storeInfo['orders'] = $this->getOrderCount();
-
+        $storeInfo['customerConfig'] = Mage::getStoreConfig('customer/account_share/scope');
         $storeInfo['moduleVersion'] = Mage::Helper('convertcart_sync')->getModuleVersion();
 
         return $storeInfo;
@@ -43,6 +44,16 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
         $products['total_products'] = $collection->getSize();
         return $products;
+    }
+
+    public function getCategoryCount()
+    {
+        $collection = Mage::getModel('convertcart_sync/category')
+                    ->getCollection()
+                    ->addAttributeToSelect('entity_id');
+
+        $categories['total_categories'] = $collection->getSize();
+        return $categories;
     }
 
     public function getBaseUrl($storeId)
