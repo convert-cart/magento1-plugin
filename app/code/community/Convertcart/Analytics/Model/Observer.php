@@ -146,16 +146,6 @@ class Convertcart_Analytics_Model_Observer
             if(!is_object($product))
                 return;
 
-            $summaryData = Mage::getModel('review/review_summary')->load($product->getId());
-
-            if(is_object($summaryData))
-                $ratingPercent = $summaryData->getRatingSummary();
-
-            if($ratingPercent > 0)
-                $rating = ($ratingPercent/100)*5;
-            else
-                $rating = 0;
-
             $store = Mage::app()->getStore();
             if(is_object($store))
                 $currency = $store->getCurrentCurrencyCode();
@@ -168,8 +158,7 @@ class Convertcart_Analytics_Model_Observer
                 'price' => $cc->getPrice($product->getPrice()),
                 'final_price' => $cc->getPrice($product->getFinalPrice()),
                 'currency' => $currency,
-                'sku' => $product->getSku(),
-                'rating' => $rating
+                'sku' => $product->getSku()
             );
 
             if($product->getImage() != null and $product->getImage() != "no_selection")
@@ -179,19 +168,7 @@ class Convertcart_Analytics_Model_Observer
             if (is_object($stock)) {
                 $productData['is_in_stock'] = $stock->getIsInStock();
             }
-
-            $categories = Mage::getModel('catalog/category')->getCollection()
-                        ->addAttributeToSelect('name')
-                        ->addFieldToFilter('entity_id', array('in'=>$product->getCategoryIds()));
-
-            $productData['category'] = array();
             //$productData['category_ids'] = $product->getCategoryIds();
-            $c=0;
-            foreach ($categories as $category) {
-                $productData['category'][$c]['name'] = $category->getName();
-                $productData['category'][$c]['id'] = $category->getId();
-                $c++;
-            }
 
             $productData['type'] = $product->getTypeId();
 
@@ -431,21 +408,13 @@ class Convertcart_Analytics_Model_Observer
             $customerData['last_name'] = $customer->getLastname();
             $customerData['id'] = $customer->getId();
             $customerData['created_at'] = $customer->getCreatedAt();
-            $customerTotals = Mage::getResourceModel('sales/sale_collection')
-                 ->setOrderStateFilter(Mage_Sales_Model_Order::STATE_CANCELED, true)
-                 ->setCustomerFilter($customer)
-                 ->load()
-                 ->getTotals();
 
             $store = Mage::app()->getStore();
             if(is_object($store))
                 $currency = $store->getCurrentCurrencyCode();
             $customerData['currency'] =  $currency;
-            $customerData['num_orders'] =  $customerTotals->getNumOrders();
 
             $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $customerData['lifetime_sales'] =  $cc->getValue($customerTotals->getLifetime());
-
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("loggedIn");
             $ccData['event_data'] = $customerData;
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
@@ -592,6 +561,7 @@ class Convertcart_Analytics_Model_Observer
     public function ordered($observer)
     {
         try {
+            // find a better approach/event
             $orderId = $observer->getData('order_ids');
             if ($orderId) {
                 $order = Mage::getModel('sales/order')->load($orderId);
@@ -632,24 +602,11 @@ class Convertcart_Analytics_Model_Observer
                 $orderItems[] = $orderItem;
             }
 
-            if ($order->getCustomerId()) {
-                $customerOrders = Mage::getResourceModel('sales/order_collection')
-                                ->addFieldToSelect('customer_id')
-                                ->addFieldToFilter('customer_id', $order->getCustomerId())
-                                ->addFieldToFilter('state', array('nin' => array('canceled','pending')));
-
-                if (is_object($customerOrders))
-                    $orderCount = $customerOrders->getSize() ? $customerOrders->getSize() : 1;
-            } else {
-                $orderCount = 1;
-            }
-
             $cc = Mage::getSingleton('convertcart_analytics/cc');
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("ordered");
             $ccData['event_data']['orderId'] = $order->getIncrementId();
             $ccData['event_data']['order_email'] = $order->getCustomerEmail();
             $ccData['event_data']['is_guest'] = $order->getCustomerIsGuest();
-            $ccData['event_data']['order_count'] = $orderCount;
             $ccData['event_data']['items'] = $orderItems;
             $ccData['event_data']['coupon_code'] = $order->getCouponCode();
             $ccData['event_data']['shipping_method'] = $order->getShippingDescription();
