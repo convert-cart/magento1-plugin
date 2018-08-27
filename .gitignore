@@ -1,0 +1,6 @@
+*
+!app/code/community/Convertcart
+!app/design/frontend/base/default/template/convertcart
+!app/etc/modules/Convertcart_Analytics.xml
+!app/etc/modules/Convertcart_Sync.xml
+!.gitignore

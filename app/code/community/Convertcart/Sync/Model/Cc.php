@@ -36,6 +36,7 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
 
             $productData['category_ids'] = $product->getCategoryIds();
             $productData['childProductIds'] = $this->getChildProductIds($product);
+            $productData['final_price'] = $product->getFinalPrice();
 
             $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
             $productData['stock_data'] = $stock->getData();
@@ -57,7 +58,7 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
             $productData['upSellProductIds'] = $product->getUpSellProductIds();
         }
 
-        return $productData;        
+        return $productData;
     }
 
     public function getCategoryData($category)
@@ -69,7 +70,7 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
 
         if ($this->queryMethod == 'custom') {
             $category->setStoreId($this->storeId);
-    
+
             $categoryData['category_id'] = $category->getId();
             $categoryData['name']        = $category->getData('name');
             $categoryData['description'] = $category->getData('description');
@@ -164,8 +165,8 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
         // $this->updatedAt = isset($params['updatedAt']) ? date("Y-m-d h:i:s", $params['updatedAt']/1000) : '2011-07-29 00:00:00';
         $this->limit = isset($params['limit']) ? $params['limit'] : 5;
         $this->offset = isset($params['offset']) ? $params['offset'] : 0;
-        $this->order = isset($params['order']) ? $params['order'] : 'asc';        
-        $this->storeId = isset($params['storeId']) ? $params['storeId'] : 0;
+        $this->order = isset($params['order']) ? $params['order'] : 'asc';
+        $this->storeId = isset($params['storeId']) ? $params['storeId'] : 1;
         $this->debug = isset($params['debug']) ? $params['debug'] : 0;
         $this->subscriberId = isset($params['subscriberId']) ? $params['subscriberId'] : 0;
         $this->showRelatedProducts = isset($params['showRelatedProducts']) ? $params['showRelatedProducts'] : 1;
@@ -182,7 +183,6 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
             $params = $request->getParams();
         else
             $params = null;
-
-        return $params;        
-    }    
+        return $params;
+    }
 }

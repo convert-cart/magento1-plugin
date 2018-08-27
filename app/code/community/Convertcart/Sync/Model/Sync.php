@@ -62,7 +62,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $url['base_link_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_LINK);
         $url['base_skin_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_SKIN);
         $url['base_media_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA);
-        $url['base_js_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS);        
+        $url['base_js_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS);
 
         return $url;
     }
@@ -87,7 +87,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
                     $storeCount++;
                     $storeData['store_id'] = $store->getId();
                     $storeData['store_code'] = $store->getCode();
-                    $storeData['store_name'] = $store->getName();                    
+                    $storeData['store_name'] = $store->getName();
 
                     $allowedCurrencies = $store->getAvailableCurrencyCodes(true);
                     $storeData['base_currency'] = $store->getBaseCurrencyCode();
@@ -103,7 +103,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
                 }
             }
             $websiteData['total_stores'] = $storeCount;
-            $websiteData['stores'] = $allStore; 
+            $websiteData['stores'] = $allStore;
             $allWebsite[] =  $websiteData;
         }
 
@@ -122,7 +122,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
         $currencies = $currencyModel->getConfigAllowCurrencies();
         $baseCurrencyCode = Mage::app()->getStore()->getBaseCurrencyCode();
-        $defaultCurrencies = $currencyModel->getConfigBaseCurrencies();         
+        $defaultCurrencies = $currencyModel->getConfigBaseCurrencies();
         $rates = $currencyModel->getCurrencyRates($defaultCurrencies, $currencies);
 
         $currencyData = array();
@@ -238,6 +238,36 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         return $productData;
     }//getProducts function ends
 
+    public function getProductsCustomAttr($params)
+    {
+        $ccModel = Mage::getSingleton('convertcart_sync/cc');
+        $ccModel->setParams($params);
+        $requiredAttr = !empty($params['requiredAttr']) ? $params['requiredAttr'] : array('price', 'name');
+        $products = Mage::getModel('catalog/product')
+                    ->getCollection()
+                    ->setStoreId($ccModel->storeId)
+                    ->addAttributeToSort('updated_at', $ccModel->order);
+
+        foreach ($requiredAttr as $attr) {
+            $products = $products
+                ->addAttributeToSelect($attr);
+        }
+
+        $products = $products
+                    ->addAttributeToFilter('updated_at', array('gteq' => $ccModel->updatedAt))
+                    ->setPageSize($ccModel->limit)
+                    ->setCurPage($ccModel->page);
+
+        $productData = array();
+        foreach ($products as $product) {
+            $prod = array();
+            foreach ($requiredAttr as $attr) {
+                $prod[$attr] = $product->getData($attr);
+            }
+            $productData[] = $prod;
+        }
+        return $productData;
+    }
 
     public function getCategories($params)
     {
@@ -270,7 +300,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
     {
         $ccModel = Mage::getSingleton('convertcart_sync/cc');
         $ccModel->setParams($params);
-        
+
         $wishlistCollection = Mage::getModel("wishlist/wishlist")
                             ->getCollection()
                             ->addFieldToFilter('updated_at', array('gteq' =>$ccModel->updatedAt))

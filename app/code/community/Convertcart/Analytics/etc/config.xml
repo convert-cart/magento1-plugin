@@ -16,7 +16,7 @@
                 </observers>
             </controller_action_layout_render_before>
 
-            <controller_action_layout_render_before>            
+            <controller_action_layout_render_before>
                 <observers>
                     <convertcart_analytics_init>
                         <type>singleton</type>
@@ -64,17 +64,17 @@
                         <method>checkoutView</method>
                     </convertcart_analytics_checkout_view>
                 </observers>
-            </controller_action_layout_generate_blocks_after> 
-            
-            <catalogsearch_query_load_after> 
-                <observers> 
+            </controller_action_layout_generate_blocks_after>
+
+            <catalogsearch_query_load_after>
+                <observers>
                         <convertcart_analytics_search_view>
                             <type>singleton</type>
                             <class>Convertcart_Analytics_Model_Observer</class>
                             <method>searchView</method>
                         </convertcart_analytics_search_view>
-                </observers>         
-            </catalogsearch_query_load_after> 
+                </observers>
+            </catalogsearch_query_load_after>
 
             <controller_action_postdispatch_customer_account_createpost>
                 <observers>
@@ -83,7 +83,7 @@
                         <class>Convertcart_Analytics_Model_Observer</class>
                         <method>customerRegisterOld</method>
                     </convertcart_analytics_customer_register_old>
-                </observers>          
+                </observers>
             </controller_action_postdispatch_customer_account_createpost>
 
             <checkout_submit_all_after>
@@ -103,7 +103,7 @@
                         <class>Convertcart_Analytics_Model_Observer</class>
                         <method>customerRegister</method>
                     </convertcart_analytics_customer_register>
-                </observers>          
+                </observers>
             </customer_register_success>
 
             <customer_login>
@@ -112,7 +112,7 @@
                         <type>singleton</type>
                         <class>Convertcart_Analytics_Model_Observer</class>
                         <method>loggedIn</method>
-                    </convertcart_analytics_customer_login>            
+                    </convertcart_analytics_customer_login>
                 </observers>
             </customer_login>
 
@@ -122,9 +122,9 @@
                         <type>singleton</type>
                         <class>Convertcart_Analytics_Model_Observer</class>
                         <method>loggedOut</method>
-                    </convertcart_analytics_customer_logout>            
+                    </convertcart_analytics_customer_logout>
                 </observers>
-            </customer_logout>          
+            </customer_logout>
 
             <checkout_cart_product_add_after>
                 <observers>
@@ -132,8 +132,8 @@
                         <type>singleton</type>
                         <class>Convertcart_Analytics_Model_Observer</class>
                         <method>addToCart</method>
-                    </convertcart_analytics_addToCart>            
-                </observers>          
+                    </convertcart_analytics_addToCart>
+                </observers>
             </checkout_cart_product_add_after>
 
             <sales_quote_remove_item>
@@ -142,8 +142,8 @@
                         <type>singleton</type>
                         <class>Convertcart_Analytics_Model_Observer</class>
                         <method>removeFromCart</method>
-                    </convertcart_analytics_removeFromCart>            
-                </observers>                    
+                    </convertcart_analytics_removeFromCart>
+                </observers>
             </sales_quote_remove_item>
 
             <checkout_onepage_controller_success_action>
@@ -153,35 +153,35 @@
                         <class>Convertcart_Analytics_Model_Observer</class>
                         <method>ordered</method>
                     </convertcart_analytics_ordered>
-                </observers>  
+                </observers>
             </checkout_onepage_controller_success_action>
 
             <wishlist_add_product>
                 <observers>
-                     <convertcart_analytics_addToWishlist>         
+                     <convertcart_analytics_addToWishlist>
                           <class>Convertcart_Analytics_Model_Observer</class>
-                          <method>addToWishlist</method>           
+                          <method>addToWishlist</method>
                       </convertcart_analytics_addToWishlist>
                 </observers>
-            </wishlist_add_product>    
+            </wishlist_add_product>
 
             <wishlist_item_delete_after>
                 <observers>
-                    <convertcart_analytics_removeFromWishlist>         
+                    <convertcart_analytics_removeFromWishlist>
                         <class>Convertcart_Analytics_Model_Observer</class>
-                        <method>removeFromWishlist</method>           
+                        <method>removeFromWishlist</method>
                     </convertcart_analytics_removeFromWishlist>
                 </observers>
-            </wishlist_item_delete_after>    
+            </wishlist_item_delete_after>
 
             <wishlist_update_item>
                 <observers>
-                    <convertcart_analytics_updateWishlist>         
+                    <convertcart_analytics_updateWishlist>
                         <class>Convertcart_Analytics_Model_Observer</class>
-                        <method>wishlistView</method>           
+                        <method>wishlistView</method>
                     </convertcart_analytics_updateWishlist>
                 </observers>
-             </wishlist_update_item>    
+             </wishlist_update_item>
 
             <controller_action_layout_generate_blocks_after>
                 <observers>
@@ -190,32 +190,32 @@
                         <class>Convertcart_Analytics_Model_Observer</class>
                         <method>wishlistView</method>
                     </convertcart_analytics_wishlist_view>
-                    
+
                     <convertcart_analytics_compare_view>
                         <type>singleton</type>
                         <class>Convertcart_Analytics_Model_Observer</class>
                         <method>compareView</method>
                     </convertcart_analytics_compare_view>
-                </observers>                    
+                </observers>
             </controller_action_layout_generate_blocks_after>
 
             <catalog_product_compare_add_product>
                 <observers>
-                    <convertcart_analytics_addToCompare>         
+                    <convertcart_analytics_addToCompare>
                         <class>Convertcart_Analytics_Model_Observer</class>
-                        <method>addToCompare</method>           
+                        <method>addToCompare</method>
                     </convertcart_analytics_addToCompare>
                   </observers>
-            </catalog_product_compare_add_product>    
+            </catalog_product_compare_add_product>
 
            <catalog_product_compare_remove_product>
                 <observers>
-                      <convertcart_analytics_removeFromCompare>         
+                      <convertcart_analytics_removeFromCompare>
                           <class>Convertcart_Analytics_Model_Observer</class>
-                            <method>removeFromCompare</method>           
+                            <method>removeFromCompare</method>
                       </convertcart_analytics_removeFromCompare>
                   </observers>
-            </catalog_product_compare_remove_product>  
+            </catalog_product_compare_remove_product>
 
             <controller_action_postdispatch_checkout_cart_couponPost>
                 <observers>
@@ -223,8 +223,8 @@
                         <type>singleton</type>
                         <class>Convertcart_Analytics_Model_Observer</class>
                         <method>couponInfo</method>
-                    </convertcart_analytics_couponInfo>            
-                </observers>          
+                    </convertcart_analytics_couponInfo>
+                </observers>
             </controller_action_postdispatch_checkout_cart_couponPost>
 
             <review_save_after>
@@ -233,9 +233,9 @@
                         <type>singleton</type>
                         <class>Convertcart_Analytics_Model_Observer</class>
                         <method>reviewSave</method>
-                    </convertcart_analytics_reviewSave>            
-                </observers>          
-            </review_save_after>            
+                    </convertcart_analytics_reviewSave>
+                </observers>
+            </review_save_after>
         </events>
     </frontend>
     <global>

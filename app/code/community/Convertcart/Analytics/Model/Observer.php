@@ -24,10 +24,13 @@ class Convertcart_Analytics_Model_Observer
                 return;
             }
 
-
             $cc->clearData();
             foreach ($ccData as $singleEvent) {
-                $singleEventData = $singleEvent['event_data'];
+                if (!empty($singleEvent['event_data']) and is_array($singleEvent['event_data'])) {
+                    $singleEventData = $singleEvent['event_data'];
+                } else {
+                    $singleEventData = array();
+                }
                 $singleEventData['ccEvent'] = $singleEvent['event_type'];
                 $singleEventData['meta_data'] = $singleEvent['meta_data'];
 
@@ -89,7 +92,7 @@ class Convertcart_Analytics_Model_Observer
             }
 
             $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("homepageView");
-            $ccView['event_data'] = '';
+            $ccView['event_data'] = array();
             $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
             $cc = Mage::getSingleton('convertcart_analytics/cc');
@@ -168,18 +171,18 @@ class Convertcart_Analytics_Model_Observer
             if (is_object($stock)) {
                 $productData['is_in_stock'] = $stock->getIsInStock();
             }
-            //$productData['category_ids'] = $product->getCategoryIds();
+            // $productData['category_ids'] = $product->getCategoryIds();
 
             $productData['type'] = $product->getTypeId();
-
             if ($productData['type'] == "configurable") {
                 $productData['product_type'] = "parent";
                 $childProducts = Mage::getModel('catalog/product_type_configurable')
                                     ->getChildrenIds($product->getId());
                 $productData['child_ids'] = $childProducts[0];
             }
-            else
+            else {
                 $productData['product_type'] = "simple";
+            }
 
             $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("productView");
             $ccView['event_data'] = $productData;

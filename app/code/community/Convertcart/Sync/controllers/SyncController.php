@@ -73,7 +73,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
-    }//orderAction ends	
+    }//orderAction ends
 
     public function catalogAction()
     {
@@ -85,6 +85,23 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             $params = Mage::getModel('convertcart_sync/cc')->getParams();
             $productData = Mage::getModel('convertcart_sync/sync')->getProducts($params);
 
+            $this->getResponse()->setHeader('Content-type', 'application/json');
+            $this->getResponse()->setBody(json_encode($productData));
+        } catch (Exception $e) {
+            Mage::log($e, null, $this->logFile);
+            Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
+        }
+    }//catalogAction ends
+
+    public function productAction()
+    {
+        try {
+            if (Mage::Helper('convertcart_sync')->canSyncCatalog() == false) { //dont proceed if not enabled
+                return;
+            }
+
+            $params = Mage::getModel('convertcart_sync/cc')->getParams();
+            $productData = Mage::getModel('convertcart_sync/sync')->getProductsCustomAttr($params);
             $this->getResponse()->setHeader('Content-type', 'application/json');
             $this->getResponse()->setBody(json_encode($productData));
         } catch (Exception $e) {
@@ -136,7 +153,7 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
                 return;
             }
 
-            $params = Mage::getModel('convertcart_sync/cc')->getParams(); 
+            $params = Mage::getModel('convertcart_sync/cc')->getParams();
             $newsletterSubscribers = Mage::getModel('convertcart_sync/sync')->getNewsletterSubscribers($params);
 
             $this->getResponse()->setHeader('Content-type', 'application/json');

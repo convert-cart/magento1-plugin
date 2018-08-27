@@ -71,22 +71,23 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
             if(!is_object($locale))
                 $metaData['language'] = $locale->getLocaleCode();
 
-            $metaData['magento_store_code'] = $store->getCode();
-            $metaData['magento_store_id'] = $store->getId();
+            $metaData['store_code'] = $store->getCode();
+            $metaData['store_id'] = $store->getId();
 
             $website = Mage::app()->getWebsite();
 
             if(!is_object($website))
                 return $metaData;
 
-            $metaData['magento_website_id'] = $website->getId();
-            $metaData['magento_website_code'] = $website->getCode();
+            $metaData['website_id'] = $website->getId();
+            $metaData['website_code'] = $website->getCode();
         }
 
         // maintianing plugin_version nomenclature across all plugins
         $metaData['plugin_version'] = Mage::Helper('convertcart_analytics')->getModuleVersion();
         return $metaData;
     }
+
 
     public function getCartItemOptions($item)
     {
