@@ -206,26 +206,32 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
                 return;
         }
 
-        //if customer logged in, then created succssfully
-        if (!Mage::getSingleton('customer/session')->isLoggedIn()) 
+        //if customer logged in, then created successfully
+        if (!Mage::getSingleton('customer/session')->isLoggedIn())
             return;
 
         $customer = Mage::getSingleton('customer/session')->getCustomer();
 
-        if(!is_object($customer)) 
-            return;
+        $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("customerRegister");
+        $ccData['event_data'] = $this->getCustomerData($customer);
+        $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
 
+        $cc = Mage::getSingleton('convertcart_analytics/cc');
+        $cc->storeData($ccData);
+    }
+
+    public function getCustomerData($customer)
+    {
+        $customerData = array();
+        if (!is_object($customer)) {
+            return $customerData;
+        }
         $customerData['email'] = $customer->getEmail();
         $customerData['first_name'] = $customer->getFirstname();
         $customerData['last_name'] = $customer->getLastname();
         $customerData['id'] = $customer->getId();
 
-        $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("customerRegister");
-        $ccData['event_data'] = $customerData;
-        $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-        $cc = Mage::getSingleton('convertcart_analytics/cc');  
-        $cc->storeData($ccData);        
+        return $customerData;
     }
 
     public function storeData($eventData)
@@ -246,7 +252,7 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         $session->setCc_Events($ccData);
         return $this;
     }
-    
+
     public function clearData()
     {
         Mage::getSingleton('convertcart_analytics/session')
