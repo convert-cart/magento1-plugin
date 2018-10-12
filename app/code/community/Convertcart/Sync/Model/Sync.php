@@ -261,6 +261,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $productData = array();
         foreach ($products as $product) {
             $prod = array();
+            $prod['final_price'] = $product->getFinalPrice();
             foreach ($requiredAttr as $attr) {
                 $prod[$attr] = $product->getData($attr);
             }

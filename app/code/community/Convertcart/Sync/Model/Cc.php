@@ -42,7 +42,8 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
             $productData['stock_data'] = $stock->getData();
             $productData['store_url'] = $product->getProductUrl();
             $productData['url'] = Mage::app()->getStore($this->storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK).$product->getUrlPath();
-            if (!empty($product->getImage()) and $product->getImage() != 'no_selection') {
+
+            if ($product->getImage() != null and $product->getImage() != 'no_selection') {
                 $productData['image_url'] = Mage::app()->getStore($this->storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $product->getImage();
             }
             $productData['store_ids'] = $product->getStoreIds();
@@ -52,6 +53,7 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
             $productData = Mage::getModel('catalog/product_api')->info($product->getId(), $this->storeId);
         }
 
+        $productData['configInfo'] = $this->getConfigInfo($product);
         if ($this->showRelatedProducts != 0) {
             $productData['relatedProductIds'] = $product->getRelatedProductIds();
             $productData['crossSellProductIds'] = $product->getCrossSellProductIds();
@@ -96,6 +98,39 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
         }
 
         return $categoryData;
+    }
+
+    public function getConfigInfo($product)
+    {
+        if (!is_object($product)) {
+            return null;
+        }
+        if ($product->getTypeId() != "configurable") {
+            return null;
+        }
+        $attributes = $product->getTypeInstance(true)->getConfigurableAttributes($product);
+        $configArray = array();
+        $configArray['basePrice'] = $product->getFinalPrice();
+        $options = array();
+        foreach ($attributes as $attribute) {
+            $options = $attribute->getPrices();
+        }
+        $configArray['children'] = array();
+        $simpleProducts = $product->getTypeInstance()->getUsedProducts();
+        foreach ($simpleProducts as $simpleProduct) {
+            $childInfo = array();
+            foreach ($attributes as $attribute) {
+                $childInfo['product_id'] = $simpleProduct->getId();
+                $childInfo['product_sku'] = $simpleProduct->getSku();
+                $childInfo['attribute_code'] = $attribute->getProductAttribute()->getAttributeCode();
+                $childInfo['attribute_value'] = $simpleProduct->getData($childInfo['attribute_code']);
+                $childInfo['value_id'] = $childInfo['attribute_value'];
+            }
+            $configArray['children'][] = $childInfo;
+        }
+        $configArray['children'] = array_replace_recursive($options, $configArray['children']);
+
+        return $configArray;
     }
 
     public function getChildProductIds($parentProduct)
