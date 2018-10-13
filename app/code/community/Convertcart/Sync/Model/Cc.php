@@ -111,10 +111,11 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
         $attributes = $product->getTypeInstance(true)->getConfigurableAttributes($product);
         $configArray = array();
         $configArray['basePrice'] = $product->getFinalPrice();
-        $options = array();
+        $configArray['options'] = array();
         foreach ($attributes as $attribute) {
-            $options = $attribute->getPrices();
+            $configArray['options'] = array_merge($configArray['options'], $attribute->getPrices());
         }
+
         $configArray['children'] = array();
         $simpleProducts = $product->getTypeInstance()->getUsedProducts();
         foreach ($simpleProducts as $simpleProduct) {
@@ -128,7 +129,6 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
             }
             $configArray['children'][] = $childInfo;
         }
-        $configArray['children'] = array_replace_recursive($options, $configArray['children']);
 
         return $configArray;
     }
