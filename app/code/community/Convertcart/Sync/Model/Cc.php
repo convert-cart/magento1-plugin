@@ -188,7 +188,6 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
     {
         if ($this->debug == 1) {
             error_reporting(E_ALL);
-            ini_set('display_errors', 1);
             Mage::setIsDeveloperMode(true);
         }
     }

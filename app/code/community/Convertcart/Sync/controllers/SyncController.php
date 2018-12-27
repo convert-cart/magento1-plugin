@@ -1,8 +1,6 @@
 <?php
 class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
 {
-    public $logFile = 'cc_sync.log';
-
     public function preDispatch()
     {
         Mage::helper('convertcart_sync')->authorize();
@@ -15,7 +13,6 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             $countData = Mage::getModel('convertcart_sync/sync')->getStoreInfo();
             Mage::Helper('convertcart_sync')->sendSuccessResponse($countData);
         } catch (Exception $e) {
-            Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
@@ -26,7 +23,6 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             $attributes = Mage::getModel('convertcart_sync/sync')->getAttributes();
             Mage::Helper('convertcart_sync')->sendSuccessResponse($attributes);
         } catch (Exception $e) {
-            Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
@@ -38,7 +34,6 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             $customerData = Mage::getModel('convertcart_sync/sync')->getCustomers($params);
             Mage::Helper('convertcart_sync')->sendSuccessResponse($customerData);
         } catch (Exception $e) {
-            Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
@@ -50,7 +45,6 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             $orderData = Mage::getModel('convertcart_sync/sync')->getOrders($params);
             Mage::Helper('convertcart_sync')->sendSuccessResponse($orderData);
         } catch (Exception $e) {
-            Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
@@ -62,7 +56,6 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             $productData = Mage::getModel('convertcart_sync/sync')->getProducts($params);
             Mage::Helper('convertcart_sync')->sendSuccessResponse($productData);
         } catch (Exception $e) {
-            Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
@@ -74,7 +67,6 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             $productData = Mage::getModel('convertcart_sync/sync')->getProductsCustomAttr($params);
             Mage::Helper('convertcart_sync')->sendSuccessResponse($productData);
         } catch (Exception $e) {
-            Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
@@ -86,7 +78,6 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             $categoryData = Mage::getModel('convertcart_sync/sync')->getCategories($params);
             Mage::Helper('convertcart_sync')->sendSuccessResponse($categoryData);
         } catch (Exception $e) {
-            Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
@@ -98,7 +89,6 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             $wishlistData = Mage::getModel('convertcart_sync/sync')->getWishlist($params);
             Mage::Helper('convertcart_sync')->sendSuccessResponse($wishlistData);
         } catch (Exception $e) {
-            Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
@@ -110,7 +100,6 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             $newsletterSubscribers = Mage::getModel('convertcart_sync/sync')->getNewsletterSubscribers($params);
             Mage::Helper('convertcart_sync')->sendSuccessResponse($newsletterSubscribers);
         } catch (Exception $e) {
-            Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }

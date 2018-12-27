@@ -38,7 +38,7 @@ class Convertcart_Sync_Model_Observer
                     ->setType('delete')
                     ->save();
         } catch (Exception $e) {
-            Mage::log($e, null, $this->logFile);
+            Mage::log($e->getMessage(), null, $this->logFile);
         }
     }
 
@@ -64,7 +64,7 @@ class Convertcart_Sync_Model_Observer
                     ->setType('delete');
             $model->save();
         } catch (Exception $e) {
-            Mage::log($e, null, $this->logFile);
+            Mage::log($e->getMessage(), null, $this->logFile);
         }
     }
 }

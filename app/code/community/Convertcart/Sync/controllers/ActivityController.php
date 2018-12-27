@@ -1,8 +1,6 @@
 <?php
 class Convertcart_Sync_ActivityController extends Mage_Core_Controller_Front_Action
 {
-    public $logFile = 'cc_sync.log';
-
     public function preDispatch()
     {
         Mage::helper('convertcart_sync')->authorize();
@@ -22,7 +20,6 @@ class Convertcart_Sync_ActivityController extends Mage_Core_Controller_Front_Act
             $data = $collection->getData();
             Mage::helper('convertcart_sync')->sendSuccessResponse($data);
         } catch (Exception $e) {
-            Mage::log($e, null, $this->logFile);
             Mage::helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
@@ -54,7 +51,6 @@ class Convertcart_Sync_ActivityController extends Mage_Core_Controller_Front_Act
                     ->setHeader('Content-type', 'application/json')
                     ->setBody(json_encode($response));
             } else {
-                Mage::log($e, null, $this->logFile);
                 Mage::helper('convertcart_sync')->sendErrorResponse($e->getMessage());
             }
         }
