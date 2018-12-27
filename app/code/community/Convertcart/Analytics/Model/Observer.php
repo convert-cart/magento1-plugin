@@ -130,7 +130,6 @@ class Convertcart_Analytics_Model_Observer
         }
     }
 
-
     public function productView($observer)
     {
         try {
@@ -277,6 +276,12 @@ class Convertcart_Analytics_Model_Observer
             $quote = Mage::getSingleton('checkout/session')->getQuote();
             $ccModel = Mage::getModel('convertcart_analytics/cc');
             $cart = $ccModel->getCartItems($quote);
+            $currency = null;
+            $store = Mage::app()->getStore();
+            if (is_object($store)) {
+                $currency = $store->getCurrentCurrencyCode();
+            }
+
             $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("cartView");
             $ccView['event_data']['items'] = $cart;
             $ccView['event_data']['currency'] = $currency;
@@ -311,6 +316,12 @@ class Convertcart_Analytics_Model_Observer
             $quote = Mage::getSingleton('checkout/session')->getQuote();
             $ccModel = Mage::getModel('convertcart_analytics/cc');
             $cart = $ccModel->getCartItems($quote);
+            $currency = null;
+            $store = Mage::app()->getStore();
+            if (is_object($store)) {
+                $currency = $store->getCurrentCurrencyCode();
+            }
+
             $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("checkoutView");
             $ccView['event_data']['items'] = $cart;
             $ccView['event_data']['currency'] = $currency;
