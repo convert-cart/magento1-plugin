@@ -6,8 +6,8 @@ class Convertcart_Analytics_Model_Observer
     public function addBlock()
     {
         try {
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $ccData = $cc->getCcData();
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+            $ccData = $ccModel->getCcData();
 
             //checking if anything to include
             if ($ccData == false) {
@@ -24,16 +24,16 @@ class Convertcart_Analytics_Model_Observer
                 return;
             }
 
-            $cc->clearData();
+            $ccModel->clearData();
             foreach ($ccData as $singleEvent) {
                 if (!empty($singleEvent['event_data']) and is_array($singleEvent['event_data'])) {
                     $singleEventData = $singleEvent['event_data'];
                 } else {
                     $singleEventData = array();
                 }
+
                 $singleEventData['ccEvent'] = $singleEvent['event_type'];
                 $singleEventData['meta_data'] = $singleEvent['meta_data'];
-
                 $eventData = Mage::app()->getLayout()->createBlock('core/template')
                             ->addData(
                                 array(
@@ -50,19 +50,20 @@ class Convertcart_Analytics_Model_Observer
                 $eventData = $eventData->setEventData(json_encode($singleEventData))
                                        ->setTemplate('convertcart/event.phtml');
                 $beforeBodyEnd->append($eventData);
-            }//foreach singles_event
+            }
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//addBlock function ends
+    }
 
     public function ccInit()
     {
         try {
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $initData = $cc->getInitScript();
-            if($initData == false) //checking if we can include script
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+            $initData = $ccModel->getInitScript();
+            if ($initData == false) { //checking if script can be inserted
                 return;
+            }
 
             $layout = Mage::getSingleton('core/layout');
             if (!is_object($layout)) {
@@ -73,11 +74,12 @@ class Convertcart_Analytics_Model_Observer
             if (!is_object($head)) {
                 return;
             }
+
             $head->append($initData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//ccInit function ends
+    }
 
     public function homepageView($observer)
     {
@@ -94,13 +96,12 @@ class Convertcart_Analytics_Model_Observer
             $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("homepageView");
             $ccView['event_data'] = array();
             $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccView);
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel->storeData($ccView);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    } // homepageView function ends
+    }
 
     public function cmsView($observer)
     {
@@ -122,13 +123,12 @@ class Convertcart_Analytics_Model_Observer
 
             $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("cmsView");
             $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccView);
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel->storeData($ccView);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    } // cmsView function ends
+    }
 
 
     public function productView($observer)
@@ -144,34 +144,34 @@ class Convertcart_Analytics_Model_Observer
             }
 
             $product = Mage::registry('current_product');
-            if(!is_object($product)) {
+            if (!is_object($product)) {
                 return;
             }
 
             $store = Mage::app()->getStore();
-            if(is_object($store)) {
+            if (is_object($store)) {
                 $currency = $store->getCurrentCurrencyCode();
             }
 
-            $cc = Mage::getModel('convertcart_analytics/cc');
+            $ccModel = Mage::getModel('convertcart_analytics/cc');
             $productData = array(
                 'id' => $product->getId(),
                 'url' => $product->getProductUrl(),
                 'name' => $product->getName(),
-                'price' => $cc->getPrice($product->getPrice()),
-                'final_price' => $cc->getPrice($product->getFinalPrice()),
+                'price' => $ccModel->getPrice($product->getPrice()),
+                'final_price' => $ccModel->getPrice($product->getFinalPrice()),
                 'currency' => $currency,
                 'sku' => $product->getSku()
             );
-
-            if($product->getImage() != null and $product->getImage() != "no_selection")
-                $productData['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $product->getImage();
+            $imageUrl = $ccModel->getImageUrl($product->getImage());
+            if ($imageUrl != null) {
+                $productData['image'] = $imageUrl;
+            }
 
             $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
             if (is_object($stock)) {
                 $productData['is_in_stock'] = $stock->getIsInStock();
             }
-            // $productData['category_ids'] = $product->getCategoryIds();
 
             $productData['type'] = $product->getTypeId();
             if ($productData['type'] == "configurable") {
@@ -179,21 +179,18 @@ class Convertcart_Analytics_Model_Observer
                 $childProducts = Mage::getModel('catalog/product_type_configurable')
                                     ->getChildrenIds($product->getId());
                 $productData['child_ids'] = $childProducts[0];
-            }
-            else {
+            } else {
                 $productData['product_type'] = "simple";
             }
 
             $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("productView");
             $ccView['event_data'] = $productData;
             $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccView);
+            $ccModel->storeData($ccView);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//productView function ends
+    }
 
     public function categoryView($observer)
     {
@@ -223,18 +220,16 @@ class Convertcart_Analytics_Model_Observer
             if (is_object($toolbar)) {
                 $ccView['event_data']['sort_by'] = $toolbar->getCurrentOrder()." - ".$toolbar->getCurrentDirection();
                 $ccView['event_data']['current_mode'] = $toolbar->getCurrentMode();
-            }//if toolbar ends
+            }
 
             $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("categoryView");
             $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccView);
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel->storeData($ccView);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//categoryView function ends
-
+    }
 
     public function searchView($observer)
     {
@@ -260,12 +255,12 @@ class Convertcart_Analytics_Model_Observer
 
             $ccView['event_type'] = $ccHelper->getEventType("searchView");
             $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccView);
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel->storeData($ccView);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//searchView function ends
+    }
 
     public function cartView($observer)
     {
@@ -280,60 +275,21 @@ class Convertcart_Analytics_Model_Observer
             }
 
             $quote = Mage::getSingleton('checkout/session')->getQuote();
-            if (!is_object($quote)) {
-                return;
-            }
-
-            $store = Mage::app()->getStore();
-            if(is_object($store))
-                $currency = $store->getCurrentCurrencyCode();
-
-            $cartItems = $quote->getAllVisibleItems();
-            $cart = array();
-            $cc = Mage::getModel('convertcart_analytics/cc');
-
-            foreach ($cartItems as $item) {
-                $cartItem = array();
-                $cartItem['name'] = str_replace("'", "", $item->getName());
-                $cartItem['price'] = $cc->getPrice($item->getPrice());
-                $cartItem['currency'] = $currency;
-                $cartItem['quantity'] = $item->getQty();
-                $cartItem['id'] = $item->getProductId();
-                $cartItem['sku'] = $item->getSku();
-                $cartItem['customOptions'] = Mage::getSingleton('convertcart_analytics/cc')->getCartItemOptions($item);
-
-                $product = $item->getProduct();
-                if (is_object($product)) {
-                    $cartItem['url'] = $product->getProductUrl();
-                }
-                $resource = Mage::getSingleton('catalog/product')->getResource();
-
-                if (is_object($resource)) {
-                    $resource = Mage::getSingleton('catalog/product')->getResource();
-                    if(is_object($store))
-                        $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
-                    if($imagePath != null and $imagePath != "no_selection")
-                        $cartItem['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
-                }
-                $cart[] = $cartItem;
-            }
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel = Mage::getModel('convertcart_analytics/cc');
+            $cart = $ccModel->getCartItems($quote);
             $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("cartView");
             $ccView['event_data']['items'] = $cart;
             $ccView['event_data']['currency'] = $currency;
             $ccView['event_data']['coupon_code'] = $quote->getCouponCode();
-
-            $ccView['event_data']['subtotal'] = $cc->getValue($quote->getSubtotal());
-            $ccView['event_data']['total'] = $cc->getValue($quote->getGrandTotal());
-            $ccView['event_data']['base_total'] = $cc->getValue($quote->getBaseGrandTotal());
+            $ccView['event_data']['subtotal'] = $ccModel->getValue($quote->getSubtotal());
+            $ccView['event_data']['total'] = $ccModel->getValue($quote->getGrandTotal());
+            $ccView['event_data']['base_total'] = $ccModel->getValue($quote->getBaseGrandTotal());
             $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta(1);
-
-            $cc->storeData($ccView);
+            $ccModel->storeData($ccView);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    } // cartView function ends
+    }
 
     public function checkoutView($observer)
     {
@@ -343,114 +299,73 @@ class Convertcart_Analytics_Model_Observer
                 return;
             }
 
-            $checkoutActionNames = array('onepagecheckout_index_index', 'checkout_onepage_index', 'onestepcheckout_index_index');
+            $checkoutActionNames = array(
+                'onepagecheckout_index_index',
+                'checkout_onepage_index',
+                'onestepcheckout_index_index'
+            );
             if (!in_array($action->getFullActionName(), $checkoutActionNames)) {
                 return;
             }
 
             $quote = Mage::getSingleton('checkout/session')->getQuote();
-            if (!is_object($quote)) {
-                return;
-            }
-
-            $store = Mage::app()->getStore();
-            if(is_object($store))
-                $currency = $store->getCurrentCurrencyCode();
-
-            $cartItems = $quote->getAllVisibleItems();
-            $cart = array();
-            $cc = Mage::getModel('convertcart_analytics/cc');
-
-            foreach ($cartItems as $item) {
-                $cartItem = array();
-                $cartItem['name'] = str_replace("'", "", $item->getName());
-                $cartItem['price'] = $cc->getPrice($item->getPrice());
-                $cartItem['currency'] = $currency;
-                $cartItem['quantity'] = $item->getQty();
-                $cartItem['id'] = $item->getProductId();
-                $cartItem['sku'] = $item->getSku();
-                $cartItem['customOptions'] = Mage::getSingleton('convertcart_analytics/cc')->getCartItemOptions($item);
-
-                $product = $item->getProduct();
-                if (is_object($product)) {
-                    $cartItem['url'] = $product->getProductUrl();
-                }
-                $resource = Mage::getSingleton('catalog/product')->getResource();
-
-                if (is_object($resource)) {
-                    $resource = Mage::getSingleton('catalog/product')->getResource();
-                    if(is_object($store))
-                        $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
-                    if($imagePath != null and $imagePath != "no_selection")
-                        $cartItem['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
-                }
-                $cart[] = $cartItem;
-            }
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel = Mage::getModel('convertcart_analytics/cc');
+            $cart = $ccModel->getCartItems($quote);
             $ccView['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("checkoutView");
             $ccView['event_data']['items'] = $cart;
             $ccView['event_data']['currency'] = $currency;
             $ccView['event_data']['coupon_code'] = $quote->getCouponCode();
-
-            $ccView['event_data']['subtotal'] = $cc->getValue($quote->getSubtotal());
-            $ccView['event_data']['total'] = $cc->getValue($quote->getGrandTotal());
-            $ccView['event_data']['base_total'] = $cc->getValue($quote->getBaseGrandTotal());
+            $ccView['event_data']['subtotal'] = $ccModel->getValue($quote->getSubtotal());
+            $ccView['event_data']['total'] = $ccModel->getValue($quote->getGrandTotal());
+            $ccView['event_data']['base_total'] = $ccModel->getValue($quote->getBaseGrandTotal());
             $ccView['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta(1);
-
-            $cc->storeData($ccView);
+            $ccModel->storeData($ccView);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    } // checkoutView function ends
+    }
 
     public function loggedIn($observer)
     {
         try {
             $customer = $observer->getCustomer();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("loggedIn");
-            $ccData['event_data'] = $cc->getCustomerData($customer);
+            $ccData['event_data'] = $ccModel->getCustomerData($customer);
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc->storeData($ccData);
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//loggedIn function ends
+    }
 
     public function loggedOut($observer)
     {
         try {
             $customer = $observer->getCustomer();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("loggedOut");
-            $ccData['event_data'] = $cc->getCustomerData($customer);
+            $ccData['event_data'] = $ccModel->getCustomerData($customer);
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc->storeData($ccData);
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//loggedOut function ends
+    }
 
     public function customerRegister($observer)
     {
         try {
             $customer = $observer->getCustomer();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("customerRegister");
-            $ccData['event_data'] = $cc->getCustomerData($customer);
+            $ccData['event_data'] = $ccModel->getCustomerData($customer);
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc->storeData($ccData);
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//customerRegister function ends
+    }
 
     public function customerRegisterOld($observer) //addedto support magento 1.4
     {
@@ -459,7 +374,7 @@ class Convertcart_Analytics_Model_Observer
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//customerRegisterOld function ends
+    }
 
     public function customerRegisterCheckOld($observer) //addedto support magento 1.4
     {
@@ -478,37 +393,35 @@ class Convertcart_Analytics_Model_Observer
             $product = $observer->getProduct();
             $quoteItem = $observer->getQuoteItem();
             $store = Mage::app()->getStore();
-
+            $ccModel = Mage::getModel('convertcart_analytics/cc');
             if (is_object($store))
                 $currency = $store->getCurrentCurrencyCode();
             if (is_object($quoteItem)) {
                 $cart['quantity'] = $quoteItem->getQty();
                 $cart['customOptions'] = Mage::getSingleton('convertcart_analytics/cc')->getCartItemOptions($quoteItem);
             }
+
             if (is_object($product)) {
-                $cc = Mage::getModel('convertcart_analytics/cc');
                 $cart['name'] = str_replace("'", "", $product->getName());
-                $cart['price'] = $cc->getPrice($product->getFinalPrice());
+                $cart['price'] = $ccModel->getPrice($product->getFinalPrice());
                 $cart['currency'] = $currency;
                 $cart['id'] = $product->getId();
                 $cart['sku'] = $product->getSku();
                 $cart['url'] = $product->getProductUrl();
-                $imagePath = $product->getImage();
-                if($imagePath != null and $imagePath != "no_selection")
-                    $cart['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+                $imageUrl = $ccModel->getImageUrl($product->getImage());
+                if ($imageUrl != null) {
+                    $cart['image'] = $imageUrl;
+                }
             }
 
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("addToCart");
             $ccData['event_data'] = $cart;
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccData);
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//addToCart function ends
-
+    }
 
     public function removeFromCart($observer)
     {
@@ -522,28 +435,25 @@ class Convertcart_Analytics_Model_Observer
                 return;
 
             $store = Mage::app()->getStore();
-            if(is_object($store))
+            if (is_object($store))
                 $currency = $store->getCurrentCurrencyCode();
 
-            $cc = Mage::getModel('convertcart_analytics/cc');
+            $ccModel = Mage::getModel('convertcart_analytics/cc');
             $cart['name'] = str_replace("'", "", $product->getName());
-            $cart['price'] = $cc->getPrice($product->getFinalPrice());
+            $cart['price'] = $ccModel->getPrice($product->getFinalPrice());
             $cart['currency'] = $currency;
             $cart['quantity'] = $quoteItem->getQty();
             $cart['id'] = $product->getId();
             $cart['sku'] = $product->getSku();
             $cart['url'] = $product->getProductUrl();
-
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("removeFromCart");
             $ccData['event_data'] = $cart;
-            $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccData);
+            $ccData['meta_data'] =  $ccModel->insertMeta();
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//removeFromCart function ends
+    }
 
     public function ordered($observer)
     {
@@ -559,6 +469,7 @@ class Convertcart_Analytics_Model_Observer
             }
 
             // $order = $observer->getOrder();
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
             $store = Mage::app()->getStore();
             if (is_object($store)) {
                 $currency = $store->getCurrentCurrencyCode();
@@ -571,25 +482,26 @@ class Convertcart_Analytics_Model_Observer
                 $orderItem['quantity'] = $item->getQtyOrdered();
                 $orderItem['id'] = $item->getProductId();
                 $orderItem['sku'] = $item->getSku();
-                $orderItem['customOptions'] = Mage::getSingleton('convertcart_analytics/cc')->getOrderItemOptions($item);
-
+                $orderItem['customOptions'] = $ccModel->getOrderItemOptions($item);
                 $product = $item->getProduct();
                 if (is_object($product)) {
                     $orderItem['url'] = $product->getProductUrl();
                 }
-                $resource = Mage::getSingleton('catalog/product')->getResource();
 
+                $resource = Mage::getSingleton('catalog/product')->getResource();
                 if (is_object($resource)) {
                     $resource = Mage::getSingleton('catalog/product')->getResource();
                     if(is_object($store))
                         $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
-                    if($imagePath != null and $imagePath != "no_selection")
-                        $orderItem['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+                        $imageUrl = $ccModel->getImageUrl($imagePath);
+                        if ($imageUrl != null) {
+                            $orderItem['image'] = $imageUrl;
+                        }
                 }
+
                 $orderItems[] = $orderItem;
             }
 
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("ordered");
             $ccData['event_data']['orderId'] = $order->getIncrementId();
             $ccData['event_data']['order_email'] = $order->getCustomerEmail();
@@ -600,50 +512,47 @@ class Convertcart_Analytics_Model_Observer
             $ccData['event_data']['payment_method'] = $order->getPayment()->getMethod();
             $ccData['event_data']['status'] = $order->getStatus();
             $ccData['event_data']['currency'] = $currency;
-
-            $ccData['event_data']['shipping_amount'] = $cc->getValue($order->getShippingAmount());
-            $ccData['event_data']['tax_amount'] = $cc->getValue($order->getTaxAmount());
-            $ccData['event_data']['discount_amount'] = $cc->getValue($order->getDiscountAmount());
-            $ccView['event_data']['subtotal'] = $cc->getValue($order->getSubtotal());
-            $ccData['event_data']['total'] = $cc->getValue($order->getGrandTotal());
-            $ccData['event_data']['base_total'] = $cc->getValue($order->getBaseGrandTotal());
-            $ccData['event_data']['total_due'] = $cc->getValue($order->getTotalDue());
-            $ccData['event_data']['base_total_due'] = $cc->getValue($order->getBaseTotalDue());
-
-            $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta(1);
-            $cc->storeData($ccData);
+            $ccData['event_data']['shipping_amount'] = $ccModel->getValue($order->getShippingAmount());
+            $ccData['event_data']['tax_amount'] = $ccModel->getValue($order->getTaxAmount());
+            $ccData['event_data']['discount_amount'] = $ccModel->getValue($order->getDiscountAmount());
+            $ccView['event_data']['subtotal'] = $ccModel->getValue($order->getSubtotal());
+            $ccData['event_data']['total'] = $ccModel->getValue($order->getGrandTotal());
+            $ccData['event_data']['base_total'] = $ccModel->getValue($order->getBaseGrandTotal());
+            $ccData['event_data']['total_due'] = $ccModel->getValue($order->getTotalDue());
+            $ccData['event_data']['base_total_due'] = $ccModel->getValue($order->getBaseTotalDue());
+            $ccData['meta_data'] =  $ccModel->insertMeta(1);
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//ordered function ends
+    }
 
     public function addToWishlist($observer)
     {
         try {
             $product  = $observer->getProduct();
-            if(!is_object($product)) {
+            if (!is_object($product)) {
                 return;
             }
 
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
             $wishlist['name'] = str_replace("'", "", $product->getName());
             $wishlist['id'] = $product->getId();
             $wishlist['sku'] = $product->getSku();
             $wishlist['url'] = $product->getProductUrl();
-
-            $imagePath = $product->getImage();
-            if($imagePath != null and $imagePath != "no_selection")
-                $wishlist['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+            $imageUrl = $ccModel->getImageUrl($product->getImage());
+            if ($imageUrl != null) {
+                $wishlist['image'] = $imageUrl;
+            }
 
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("addToWishlist");
             $ccData['event_data'] = $wishlist;
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccData);
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//addToWishlist function ends
+    }
 
     public function wishlistView($observer)
     {
@@ -660,13 +569,12 @@ class Convertcart_Analytics_Model_Observer
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("wishlistView");
             $ccData['event_data']['items'] = Mage::getSingleton('convertcart_analytics/cc')->getWishlistItems();
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccData);
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//wishlistView function ends
+    }
 
     public function removeFromWishlist($observer)
     {
@@ -674,47 +582,45 @@ class Convertcart_Analytics_Model_Observer
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("wishlistUpdated");
             $ccData['event_data']['items'] = Mage::getSingleton('convertcart_analytics/cc')->getWishlistItems();
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccData);
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//removeFromWishlist function ends
+    }
 
     public function addToCompare($observer)
     {
         try {
             $product  = $observer->getProduct();
-            if(!is_object($product)) {
+            if (!is_object($product)) {
                 return;
             }
 
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
             $compare['name'] = str_replace("'", "", $product->getName());
             $compare['id'] = $product->getId();
             $compare['sku'] = $product->getSku();
             $compare['url'] = $product->getProductUrl();
-
-            $imagePath = $product->getImage();
-            if($imagePath != null and $imagePath != "no_selection")
-                $compare['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+            $imageUrl = $ccModel->getImageUrl($product->getImage());
+            if ($imageUrl != null) {
+                $compare['image'] = $imageUrl;
+            }
 
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("addToCompare");
             $ccData['event_data'] = $compare;
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccData);
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//addToCompare function ends
+    }
 
     public function removeFromCompare($observer)
     {
         try {
             $product  = $observer->getProduct();
-            if(!is_object($product)) {
+            if (!is_object($product)) {
                 return;
             }
 
@@ -722,14 +628,12 @@ class Convertcart_Analytics_Model_Observer
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("removeFromCompare");
             $ccData['event_data'] = $compare;
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccData);
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//removeFromCompare function ends
-
+    }
 
     public function compareView($observer)
     {
@@ -746,7 +650,7 @@ class Convertcart_Analytics_Model_Observer
             $compareCollection = Mage::helper('catalog/product_compare')->getItemCollection();
             $compareItems = array();
             $store = Mage::app()->getStore();
-
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
             foreach ($compareCollection as $product) {
                 $compareItem = array();
                 $compareItem['sku'] = $product->getSku();
@@ -760,8 +664,10 @@ class Convertcart_Analytics_Model_Observer
                     $resource = Mage::getSingleton('catalog/product')->getResource();
                     if(is_object($store))
                         $imagePath = $resource->getAttributeRawValue($product->getId(), "image", $store);
-                    if($imagePath != null and $imagePath != "no_selection")
-                        $compareItem['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+                        $imageUrl = $ccModel->getImageUrl($imagePath);
+                        if ($imageUrl != null) {
+                            $compareItem['image'] = $imageUrl;
+                        }
                 }
 
                 $compareItems[] = $compareItem;
@@ -770,19 +676,17 @@ class Convertcart_Analytics_Model_Observer
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("compareView");
             $ccData['event_data']['items'] = $compareItems;
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccData);
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//compareView ends
+    }
 
     public function couponInfo($observer)
     {
         try {
             $quote = Mage::getSingleton('checkout/session')->getQuote();
-            if(is_object($quote)) {
+            if (is_object($quote)) {
                 $couponcode = $quote->getData('coupon_code'); //getting applied coupon from cart, if any
             } else {
                 $couponcode = null;
@@ -793,30 +697,29 @@ class Convertcart_Analytics_Model_Observer
                 $params = $request->getParams();
             }
 
-            if(isset($params['remove']) and $params['remove'] == 1) {
+            if (isset($params['remove']) and $params['remove'] == 1) {
                 $status = "couponRemoved";
-            } elseif(isset($params['coupon_code']) and $couponcode == $params['coupon_code']) {
+            } elseif (isset($params['coupon_code']) and $couponcode == $params['coupon_code']) {
                 $status = "couponApplied";
-            } elseif(empty($couponcode)) {
+            } elseif (empty($couponcode)) {
                 $status = "couponDenied";
             }
 
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType($status);
             $ccData['event_data']['coupon_code'] = $couponcode;
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccData);
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//couponInfo function ends
+    }
 
     public function reviewSave($observer)
     {
         try {
             $review = $observer->getEvent()->getObject();
-            if(empty($review)) {
+            if (!is_array($review)) {
                 return;
             }
 
@@ -827,11 +730,10 @@ class Convertcart_Analytics_Model_Observer
             $ccData['event_data']['review_id'] = $review['review_id'];
             $ccData['event_data']['product_id'] = $review['entity_pk_value'];
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
-
-            $cc = Mage::getSingleton('convertcart_analytics/cc');
-            $cc->storeData($ccData);
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+            $ccModel->storeData($ccData);
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, $this->logFile);
         }
-    }//reviewSave function ends
+    }
 }

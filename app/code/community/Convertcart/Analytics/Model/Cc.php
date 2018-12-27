@@ -13,11 +13,11 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
 
     public function getInitScript()
     {
-        if(Mage::Helper('convertcart_analytics')->isEnabled() == false) //dont proceed if not enabled
+        if (Mage::Helper('convertcart_analytics')->isEnabled() == false) //dont proceed if not enabled
             return;
 
         $clientKey = Mage::Helper('convertcart_analytics')->getClientKey();
-        if(!isset($clientKey))
+        if (!isset($clientKey))
             return ;
 
         $script = Mage::app()->getLayout()->createBlock('core/template')
@@ -28,13 +28,13 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
 
     public function getCcData()
     {
-        if(Mage::Helper('convertcart_analytics')->isEnabled() == false) //dont proceed if not enabled
+        if (Mage::Helper('convertcart_analytics')->isEnabled() == false) //dont proceed if not enabled
             return;
 
         $session = $this->_getSession();
         $eventData = $session->getCc_Events();
 
-        if(empty($eventData))
+        if (empty($eventData))
             return;
 
         return $eventData;
@@ -42,11 +42,11 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
 
     public function insertMeta($includeCustomerInfo = 0)
     {
-        if(Mage::Helper('convertcart_analytics')->isEnabled() == false)
+        if (Mage::Helper('convertcart_analytics')->isEnabled() == false)
             return;
 
         $metaData = array();
-        $metaData['date'] = gmdate('Y-m-d H:i:s');
+        $metaData['date'] = Mage::getModel('core/date')->gmtDate('Y-m-d H:i:s');
         if ($includeCustomerInfo !=0) {
             if (Mage::getSingleton('customer/session')->isLoggedIn()) {
                 $metaData['customer_status'] = 'logged_in';
@@ -54,13 +54,13 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
                 if(!is_object($customer))
                     return $metaData;
                 $metaData['customer_email'] = $customer->getEmail();
-            }
-            else
+            } else {
                 $metaData['customer_status'] = 'guest';
+            }
 
             $store = Mage::app()->getStore();
 
-            if(!is_object($store))
+            if (!is_object($store))
                 return $metaData;
 
             $metaData['current_currency'] = $store->getCurrentCurrencyCode();
@@ -68,7 +68,7 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
             $metaData['current_currency_rate'] = $store->getCurrentCurrencyRate();
 
             $locale = Mage::app()->getLocale();
-            if(!is_object($locale))
+            if (!is_object($locale))
                 $metaData['language'] = $locale->getLocaleCode();
 
             $metaData['store_code'] = $store->getCode();
@@ -76,7 +76,7 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
 
             $website = Mage::app()->getWebsite();
 
-            if(!is_object($website))
+            if (!is_object($website))
                 return $metaData;
 
             $metaData['website_id'] = $website->getId();
@@ -88,10 +88,55 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         return $metaData;
     }
 
+    public function getCartItems($quote)
+    {
+        $cart = array();
+        if (!is_object($quote)) {
+            return $cart;
+        }
+
+        $currency = null;
+        $store = Mage::app()->getStore();
+        if (is_object($store)) {
+            $currency = $store->getCurrentCurrencyCode();
+        }
+
+        $cartItems = $quote->getAllVisibleItems();
+        foreach ($cartItems as $item) {
+            $cartItem = array();
+            $cartItem['name'] = str_replace("'", "", $item->getName());
+            $cartItem['price'] = $this->getPrice($item->getPrice());
+            $cartItem['currency'] = $currency;
+            $cartItem['quantity'] = $item->getQty();
+            $cartItem['id'] = $item->getProductId();
+            $cartItem['sku'] = $item->getSku();
+            $cartItem['customOptions'] = $this->getCartItemOptions($item);
+            $product = $item->getProduct();
+            if (is_object($product)) {
+                $cartItem['url'] = $product->getProductUrl();
+            }
+
+            $resource = Mage::getSingleton('catalog/product')->getResource();
+            if (is_object($resource)) {
+                $resource = Mage::getSingleton('catalog/product')->getResource();
+                if (is_object($store))
+                    $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
+                    $imageUrl = $this->getImageUrl($imagePath);
+                    if ($imageUrl != null) {
+                        $cartItem['image'] = $imageUrl;
+                    }
+            }
+
+            $cart[] = $cartItem;
+        }
+
+        return $cart;
+    }
+
 
     public function getCartItemOptions($item)
     {
-        if(!is_object($item))
+        if (!is_object($item))
             return null;
 
         $product = $item->getProduct();
@@ -122,7 +167,7 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
 
     public function getOrderItemOptions($item)
     {
-        if(!is_object($item))
+        if (!is_object($item))
             return null;
 
         $options = $item->getProductOptions();
@@ -143,56 +188,70 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         return $customOptions;
     }
 
+    public function getOldWishlistItems()
+    {
+        // wishlist items for magento < v1.4
+        $wishlist = array();
+        $store = Mage::app()->getStore();
+        $wishlistItems = Mage::helper('wishlist')->getItemCollection();
+        foreach ($wishlistItems as $wishlistItem) {
+            $wlist['sku'] = str_replace("'", "", $wishlistItem->getSku());
+            $resource = Mage::getSingleton('catalog/product');
+            if (is_object($resource)) {
+                $resource = $resource->getResource();
+                if (is_object($store) and is_object($resource)) {
+                    $wlist['url_key'] = $resource->getAttributeRawValue($wishlistItem->getProductId(), "url_key", $store);
+                    $imagePath = $resource->getAttributeRawValue($wishlistItem->getProductId(), "image", $store);
+                    $imageUrl = $this->getImageUrl($imagePath);
+                    if ($imageUrl != null) {
+                        $wlist['image']= $imageUrl;
+                    }
+                }
+            }
+
+            $wishlist[] = $wlist;
+        }
+
+        return $wishlist;
+    }
+
     public function getWishlistItems()
     {
         $wishlist = array();
         $magentoVersion = Mage::getVersion();
-        if ($magentoVersion) {
-            $magentoVersion = explode(".", $magentoVersion);
-            if ($magentoVersion[1]<=4) {
-                $store = Mage::app()->getStore();
-                $wishlistItems = Mage::helper('wishlist')->getItemCollection();
-                foreach ($wishlistItems as $wishlistItem) {
-                    $wlist['sku'] = str_replace("'", "", $wishlistItem->getSku());
-                    // $wlist['quantity'] = $wishlistItem->getQty();
-                    $resource = Mage::getSingleton('catalog/product');
-                    if (is_object($resource)) {
-                        $resource = $resource->getResource();
-                        if (is_object($store) and is_object($resource)) {
-                            $imagePath = $resource->getAttributeRawValue($wishlistItem->getProductId(), "image", $store);
-                            $wlist['url_key'] = $resource->getAttributeRawValue($wishlistItem->getProductId(), "url_key", $store);
-                        }
-                        if($imagePath != null and $imagePath != "no_selection")
-                            $wlist['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
-                    }
-                    $wishlist[] = $wlist;
-                }
-            } else {
-                $store = Mage::app()->getStore();
-                $wishlistItems = Mage::helper('wishlist')->getWishlistItemCollection();
-                foreach ($wishlistItems as $wishlistItem) {
-                    $product = $wishlistItem->getProduct();
-
-                    $wlist['name'] = str_replace("'", "", $product->getName());
-                    $wlist['id'] = $product->getId();
-                    $wlist['quantity'] = $wishlistItem->getQty();
-
-                    $wlist['url'] = $product->getProductUrl();
-
-                    $resource = Mage::getSingleton('catalog/product');
-                    if (is_object($resource)) {
-                        $resource = $resource->getResource();
-                        if (is_object($store) and is_object($resource)) {
-                            $imagePath = $resource->getAttributeRawValue($product->getId(), "image", $store);
-                            $wlist['sku'] = $resource->getAttributeRawValue($product->getId(), "sku", $store);
-                        }
-                        if($imagePath != null and $imagePath != "no_selection")
-                            $wlist['image'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
-                    }
-                    $wishlist[] = $wlist;
-                }
-            } //else magento >= 1.5
+        if (!$magentoVersion) {
+            return $wishlist;
         }
+
+        $magentoVersion = explode(".", $magentoVersion);
+        if ($magentoVersion[1]<=4) {
+            $wishlist = $this->getOldWishlistItems();
+        } else {
+            $store = Mage::app()->getStore();
+            $wishlistItems = Mage::helper('wishlist')->getWishlistItemCollection();
+            foreach ($wishlistItems as $wishlistItem) {
+                $product = $wishlistItem->getProduct();
+                $wlist['name'] = str_replace("'", "", $product->getName());
+                $wlist['id'] = $product->getId();
+                $wlist['quantity'] = $wishlistItem->getQty();
+                $wlist['url'] = $product->getProductUrl();
+                $resource = Mage::getSingleton('catalog/product');
+                if (is_object($resource)) {
+                    $resource = $resource->getResource();
+                    if (is_object($store) and is_object($resource)) {
+                        $wlist['sku'] = $resource->getAttributeRawValue($product->getId(), "sku", $store);
+                        $imagePath = $resource->getAttributeRawValue($product->getId(), "image", $store);
+                        $imageUrl = $this->getImageUrl($imagePath);
+                        if ($imageUrl != null) {
+                            $wlist['image']= $imageUrl;
+                        }
+                    }
+                }
+
+                $wishlist[] = $wlist;
+            }
+        } //else magento >= 1.5
+
         return $wishlist;
     }
 
@@ -226,6 +285,7 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         if (!is_object($customer)) {
             return $customerData;
         }
+
         $customerData['email'] = $customer->getEmail();
         $customerData['first_name'] = $customer->getFirstname();
         $customerData['last_name'] = $customer->getLastname();
@@ -236,7 +296,7 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
 
     public function storeData($eventData)
     {
-        if(Mage::Helper('convertcart_analytics')->isEnabled() == false)
+        if (Mage::Helper('convertcart_analytics')->isEnabled() == false)
             return;
 
         $session = $this->_getSession();
@@ -245,9 +305,9 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         if (!$ccData or empty($ccData)) {
             $ccData = array();
             $ccData[] = $eventData;
-        }
-        else
+        } else {
             $ccData[] = $eventData;
+        }
 
         $session->setCc_Events($ccData);
         return $this;
@@ -268,11 +328,22 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         return Mage::helper('core')->currency($price, false, false);
     }
 
+    public function getImageUrl($imagePath)
+    {
+        $imageUrl = null;
+        if ($imagePath != null and $imagePath != "no_selection") {
+            $imageUrl = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+        }
+
+        return $imageUrl;
+    }
+
     public function getValue($number)
     {
-        if ( $number == null or !isset($number) )
+        if ($number == null or !isset($number)) {
             return 0;
-        else
+        } else {
             return $number;
+        }
     }
 }

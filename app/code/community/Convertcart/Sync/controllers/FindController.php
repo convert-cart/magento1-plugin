@@ -12,72 +12,48 @@ class Convertcart_Sync_FindController extends Mage_Core_Controller_Front_Action
     public function customerAction()
     {
         try {
-            if (Mage::Helper('convertcart_sync')->canSyncCustomer() == false) { //dont proceed if not enabled
-                return;
-            }
-
             $params = Mage::getModel('convertcart_sync/cc')->getParams();
             $customerData = Mage::getModel('convertcart_sync/find')->getCustomer($params);
-
-            $this->getResponse()->setHeader('Content-type', 'application/json');
-            $this->getResponse()->setBody(json_encode($customerData));
+            Mage::Helper('convertcart_sync')->sendSuccessResponse($customerData);
         } catch (Exception $e) {
             Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
-    }//customerAction ends
+    }
 
     public function orderAction()
     {
         try {
-            if (Mage::Helper('convertcart_sync')->canSyncOrder() == false) { //dont proceed if not enabled
-                return;
-            }
-
             $params = Mage::getModel('convertcart_sync/cc')->getParams();
             $orderData = Mage::getModel('convertcart_sync/find')->getOrder($params);
-
-            $this->getResponse()->setHeader('Content-type', 'application/json');
-            $this->getResponse()->setBody(json_encode($orderData));
+            Mage::Helper('convertcart_sync')->sendSuccessResponse($orderData);
         } catch (Exception $e) {
             Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
-    }//orderAction ends
+    }
 
     public function catalogAction()
     {
         try {
-            if (Mage::Helper('convertcart_sync')->canSyncCatalog() == false) { //dont proceed if not enabled
-                return;
-            }
-
             $params = Mage::getModel('convertcart_sync/cc')->getParams();
             $productData = Mage::getModel('convertcart_sync/find')->getProduct($params);
-
-            $this->getResponse()->setHeader('Content-type', 'application/json');
-            $this->getResponse()->setBody(json_encode($productData));
+            Mage::Helper('convertcart_sync')->sendSuccessResponse($productData);
         } catch (Exception $e) {
             Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
-    }//catalogAction ends
+    }
 
     public function categoryAction()
     {
         try {
-            if (Mage::Helper('convertcart_sync')->canSyncCatalog() == false) { //dont proceed if not enabled
-                return;
-            }
-
             $params = Mage::getModel('convertcart_sync/cc')->getParams();
             $categoryData = Mage::getModel('convertcart_sync/find')->getCategory($params);
-
-            $this->getResponse()->setHeader('Content-type', 'application/json');
-            $this->getResponse()->setBody(json_encode($categoryData));
+            Mage::Helper('convertcart_sync')->sendSuccessResponse($categoryData);
         } catch (Exception $e) {
             Mage::log($e, null, $this->logFile);
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
-    }//categoryAction ends
+    }
 }

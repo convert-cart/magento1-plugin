@@ -44,6 +44,7 @@ class Convertcart_Sync_ActivityController extends Mage_Core_Controller_Front_Act
                 $model->setId($record->getId())
                       ->delete();
             }
+
             Mage::helper('convertcart_sync')->sendSuccessResponse();
         } catch (Exception $e){
             if ($e->getCode() == 400) {
@@ -51,9 +52,7 @@ class Convertcart_Sync_ActivityController extends Mage_Core_Controller_Front_Act
                 Mage::app()->getResponse()
                     ->setHeader('HTTP/1.1', '400 Bad Request')
                     ->setHeader('Content-type', 'application/json')
-                    ->setBody(json_encode($response))
-                    ->sendResponse();
-                exit;
+                    ->setBody(json_encode($response));
             } else {
                 Mage::log($e, null, $this->logFile);
                 Mage::helper('convertcart_sync')->sendErrorResponse($e->getMessage());

@@ -19,6 +19,7 @@ class Convertcart_Sync_Model_Find extends Mage_Core_Model_Session_Abstract
             $customer->loadByEmail($params['email']);
             $customerData = $customer->getData();
         }
+
         if (!is_array($customerData)) {
             return null;
         }
@@ -31,21 +32,20 @@ class Convertcart_Sync_Model_Find extends Mage_Core_Model_Session_Abstract
         unset($customerData['disable_auto_group_change']);
         unset($customerData['reward_update_notificategoryDataion']);
         unset($customerData['reward_warning_notificategoryDataion']);
-
         return $customerData;
-    }//getCustomer function ends
+    }
 
     public function getOrder($params)
     {
         if (!isset($params['id'])) { //expecting increment_id of order
             return null;
         }
+
         $ccModel = Mage::getSingleton('convertcart_sync/cc');
         $ccModel->setParams($params);
         $orderData = Mage::getModel('sales/order_api')->info($params['id']);
-
         return $orderData;
-    }//getOrder function ends
+    }
 
     public function getProduct($params)
     {
@@ -55,7 +55,6 @@ class Convertcart_Sync_Model_Find extends Mage_Core_Model_Session_Abstract
 
         $ccModel = Mage::getSingleton('convertcart_sync/cc');
         $ccModel->setParams($params);
-
         if (isset($params['id'])) {
             $product = Mage::getModel('catalog/product')
                         ->load($params['id']);
@@ -63,24 +62,22 @@ class Convertcart_Sync_Model_Find extends Mage_Core_Model_Session_Abstract
             $product = Mage::getModel('catalog/product')
                         ->loadByAttribute('sku', $params['sku']);
         }
-        $productData = $ccModel->getProductData($product);
 
+        $productData = $ccModel->getProductData($product);
         return $productData;
-    }//getProduct function ends
+    }
 
     public function getCategory($params)
     {
         if (!isset($params['id'])) {
             return null;
         }
+
         $ccModel = Mage::getSingleton('convertcart_sync/cc');
         $ccModel->setParams($params);
-
         $category = Mage::getModel('convertcart_sync/category')
                     ->load($params['id']);
-
         $categoryData = Mage::getSingleton('convertcart_sync/cc')->getCategoryData($category);
-
         return $categoryData;
-    }// getCategory function ends
+    }
 }

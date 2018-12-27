@@ -1,7 +1,7 @@
 <config>
     <modules>
         <Convertcart_Analytics>
-            <version>1.3.5</version>
+            <version>1.3.6</version>
         </Convertcart_Analytics>
     </modules>
     <frontend>

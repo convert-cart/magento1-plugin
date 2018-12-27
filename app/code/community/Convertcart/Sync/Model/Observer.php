@@ -14,10 +14,14 @@ class Convertcart_Sync_Model_Observer
         if (!$product instanceof Mage_Catalog_Model_Product) {
             return $this;
         }
+
         try {
-            $groupParentIds = Mage::getModel('catalog/product_type_grouped')->getParentIdsByChild($product->getId());
-            $configParentIds = Mage::getModel('catalog/product_type_configurable')->getParentIdsByChild($product->getId());
-            $bundleParentIds = Mage::getModel('bundle/product_type')->getParentIdsByChild($product->getId());
+            $groupParentIds = Mage::getModel('catalog/product_type_grouped')
+                                ->getParentIdsByChild($product->getId());
+            $configParentIds = Mage::getModel('catalog/product_type_configurable')
+                                ->getParentIdsByChild($product->getId());
+            $bundleParentIds = Mage::getModel('bundle/product_type')
+                                ->getParentIdsByChild($product->getId());
             $parentIds = array_merge($groupParentIds, $configParentIds);
             $parentIds = array_merge($parentIds, $bundleParentIds);
 
@@ -48,10 +52,11 @@ class Convertcart_Sync_Model_Observer
         try {
             $childrenCatIds = $category->getResource()->getChildren($category, true);
             if (is_array($childrenCatIds)) {
-                $childrenCatIds = implode(',', $childrenCatIds); 
+                $childrenCatIds = implode(',', $childrenCatIds);
             } else {
                 $childrenCatIds = null;
             }
+
             $model = Mage::getModel('convertcart_sync/activity')
                     ->setItemId($category->getId())
                     ->setChildrenIds($childrenCatIds)

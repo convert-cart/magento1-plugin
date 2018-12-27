@@ -4,63 +4,77 @@ class Convertcart_Sync_Helper_Data extends Mage_Core_Helper_Abstract
     public function isEnabled()
     {
         if ($this->getClientKey()) {
-            return 1;
-        }
-        else
+            return true;
+        } else {
             return false;
+        }
     }
 
     public function getClientKey()
     {
         $clientKey = Mage::getStoreConfig('convertcart/config/client_key');
-        if(!isset($clientKey) or $clientKey == '')
+        if (!isset($clientKey) or $clientKey == '') {
             return false;
-        else
+        } else {
             return $clientKey;
+        }
     }
 
     public function getApiKey()
     {
         $apiKey = Mage::getStoreConfig('convertcart/config/api_key');
-        if(!isset($apiKey) or $apiKey == '')
+        if (!isset($apiKey) or $apiKey == '') {
             return false;
-        else
+        } else {
             return $apiKey;
+        }
+
     }
 
     public function getResetApiKey()
     {
         $resetApiKey = Mage::getStoreConfig('convertcart/config/reset_api_key');
-        if(!isset($resetApiKey) or $resetApiKey == '')
+        if (!isset($resetApiKey) or $resetApiKey == '') {
             return false;
-        else
+        } else {
             return $resetApiKey;
-    }    
+        }
+    }
 
+    /**
+     * Deprecated since 1.1.5
+     */
     public function canSyncCatalog()
     {
-        if(Mage::getStoreConfig('convertcart/config/catalog'))
-            return 1;
-        else{
+        if (Mage::getStoreConfig('convertcart/config/catalog')) {
+            return true;
+        } else {
             $this->accessDenied();
         }
     }
 
+    /**
+     * Deprecated since 1.1.5
+     */
     public function canSyncCustomer()
     {
-        if(Mage::getStoreConfig('convertcart/config/customer'))
-            return 1;
-        else{
+        if (Mage::getStoreConfig('convertcart/config/customer')) {
+            return true;
+        } else {
             $this->accessDenied();
         }
     }
 
+    /**
+     * Deprecated since 1.1.5
+     */
     public function canSyncOrder()
     {
-        if (Mage::getStoreConfig('convertcart/config/order'))
-            return 1;
-        else
+        if (Mage::getStoreConfig('convertcart/config/order')) {
+            return true;
+        } else {
             $this->accessDenied();
+        }
     }
 
     public function generateKey()
@@ -85,6 +99,7 @@ class Convertcart_Sync_Helper_Data extends Mage_Core_Helper_Abstract
                 );
             }
         }
+
         return false;
     }
 
@@ -120,20 +135,14 @@ class Convertcart_Sync_Helper_Data extends Mage_Core_Helper_Abstract
         Mage::app()->getResponse()
             ->setHeader('HTTP/1.1', '500 Internal Server Error')
             ->setHeader('Content-type', 'application/json')
-            ->setBody(json_encode($response))
-            ->sendResponse();
-        exit;
+            ->setBody(json_encode($response));
     }
 
     public function sendSuccessResponse($data = array())
     {
-        $response['success'] = true;
-        $response['data'] = $data;
         Mage::app()->getResponse()
             ->setHeader('Content-type', 'application/json')
-            ->setBody(json_encode($response))
-            ->sendResponse();
-        exit;
+            ->setBody(json_encode($data));
     }
 
     public function getModuleVersion()

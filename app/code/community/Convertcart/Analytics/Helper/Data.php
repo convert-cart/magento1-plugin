@@ -29,28 +29,30 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
                             'couponRemoved'     =>  'couponRemoved',
                             'reviewSave'        =>  'productReviewed'
                         );
-        if(isset($eventMap[$event]))
+        if (isset($eventMap[$event])) {
             return $eventMap[$event];
-     else
+        } else {
             return 'default';
+        }
     }
 
     public function isEnabled()
     {
         if ($this->getClientKey()) {
             return 1;
-        }
-        else
+        } else {
             return false;
+        }
     }
 
     public function getClientKey()
     {
         $clientKey = Mage::getStoreConfig('convertcart/config/client_key');
-        if(!isset($clientKey) or $clientKey == '')
+        if (!isset($clientKey) or $clientKey == '') {
             return false;
-        else
+        } else {
             return $clientKey;
+        }
     }
 
     public function getModuleVersion()
