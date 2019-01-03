@@ -4,7 +4,7 @@
             <label>Convert Cart</label>
             <sort_order>99999</sort_order>
         </convertcart>
-    </tabs> 
+    </tabs>
     <sections>
         <convertcart translate="label" module="convertcart_analytics">
             <label>Convert Cart Keys</label>
@@ -24,7 +24,7 @@
                     <show_in_store>1</show_in_store>
                     <fields>
                         <client_key>
-                            <label>Enter Your Client Key</label>
+                            <label>Enter Your Client Id / Domain Id</label>
                             <comment>Contact ConvertCart to get this key</comment>
                             <frontend_type>text</frontend_type>
                             <sort_order>1</sort_order>
@@ -36,5 +36,5 @@
                 </config>
             </groups>
         </convertcart>
-    </sections>    
+    </sections>
 </config>

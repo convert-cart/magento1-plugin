@@ -19,15 +19,6 @@
                     <sort_order>1</sort_order>
                     <show_in_default>1</show_in_default>
                     <fields>
-                        <client_key>
-                            <label>Enter Your Client Key</label>
-                            <comment>Contact ConvertCart to get this key</comment>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>1</sort_order>
-                            <show_in_default>1</show_in_default>
-                        </client_key>
-                    </fields>
-                    <fields>
                         <api_key translate="label">
                             <label>API Key</label>
                             <comment>Please Send this key to ConvertCart</comment>
