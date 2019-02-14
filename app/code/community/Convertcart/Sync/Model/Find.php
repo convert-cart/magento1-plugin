@@ -80,4 +80,17 @@ class Convertcart_Sync_Model_Find extends Mage_Core_Model_Session_Abstract
         $categoryData = Mage::getSingleton('convertcart_sync/cc')->getCategoryData($category);
         return $categoryData;
     }
+    public function getReview($params)
+    {
+        if (!isset($params['id'])) {
+            return null;
+        }
+
+        $ccModel = Mage::getSingleton('convertcart_sync/cc');
+        $ccModel->setParams($params);
+        $review = Mage::getModel('review/review')->load($params['id']);
+        $productReview = $ccModel->getReviewDetails($review);
+
+        return $productReview;
+    }
 }
