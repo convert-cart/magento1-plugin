@@ -174,6 +174,45 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
         return $parentProductIds;
     }
 
+    public function getReviewDetails($review)
+    {
+        $reviewDetails = array();
+        if (!is_object($review)) {
+            return $reviewDetails;
+        }
+
+        $ratingOb = Mage::getModel('rating/rating')
+                  ->getEntitySummary($reviewDetails['entity_pk_value']);
+        if (is_object($ratingOb)) {
+            $reviewDetails['rating'] = $ratingOb->getSum()/$ratingOb->getCount();
+        }
+
+
+        $reviewDetails['id'] = $review->getId();
+        $reviewDetails['product_id'] = $review->getEntityPkValue();
+        if ($review->getCustomerId() == null) {
+            $reviewDetails['customer_id'] = 'guest';
+        } else {
+            $reviewDetails['customer_id'] = $review->getCustomerId();
+        }
+
+        $reviewDetails['review'] = $review->getDetail();
+        $reviewDetails['title'] = $review->getTitle();
+        $reviewDetails['createdAt'] = $review->getCreatedAt();
+        $reviewDetails['statusId'] = $review->getStatusId();
+        if ($review->getStatusId() == 1) {
+            $reviewDetails['status'] = 'approved';
+        } else if ($review->getStatusId() == 2) {
+            $reviewDetails['status'] = 'pending';
+        } else if ($review->getStatusId() == 3) {
+            $reviewDetails['status'] = 'rejected';
+        } else {
+            $reviewDetails['status'] = 'other';
+        }
+
+        return $reviewDetails;
+    }
+
     public function debugMode()
     {
         if ($this->debug == 1) {

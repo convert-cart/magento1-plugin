@@ -103,4 +103,15 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
+
+    public function reviewAction()
+    {
+        try {
+            $params = Mage::getModel('convertcart_sync/cc')->getParams();
+            $review = Mage::getmodel('convertcart_sync/sync')->getReviews($params);
+            Mage::Helper('convertcart_sync')->sendSuccessResponse($review);
+        } catch (Exception $e) {
+            Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
+        }
+    }
 }

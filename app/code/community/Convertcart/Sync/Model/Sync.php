@@ -354,4 +354,18 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
         return $newsletterSubscribers;
     }
+    public function getReviews($params)
+    {
+        $ccModel = Mage::getSingleton('convertcart_sync/cc');
+        $ccModel->setParams($params);
+        $productReviews = array();
+        $collection = Mage::getModel('review/review')
+                    ->getCollection()
+                    ->addStoreFilter($ccModel->storeId);
+        foreach ($collection as $review) {
+            $productReviews[] = $ccModel->getReviewDetails($review);
+        }
+
+        return $productReviews;
+    }
 }
