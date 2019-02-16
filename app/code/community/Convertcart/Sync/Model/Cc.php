@@ -78,7 +78,14 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
             return $galleryImages;
         }
 
-        foreach ($product->getMediaGalleryImages() as $image) {
+        $product->load('media_gallery');//load media gallery attributes
+        $mediaGallery = $product->getMediaGalleryImages();
+
+        if (!is_object($mediaGallery)) {
+            return $galleryImages;
+        }
+
+        foreach ($mediaGallery as $image) {
             $galleryImage['url'] = $image->getUrl();
             $galleryImage['id'] = $image->getId();
             $galleryImage['position'] = $image->getPosition();
