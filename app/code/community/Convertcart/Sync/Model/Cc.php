@@ -60,7 +60,34 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
             $productData['upSellProductIds'] = $product->getUpSellProductIds();
         }
 
+        $productData['parentProductIds'] = $this->getParentProductIds($product);
+        $productData['baseImageUrl'] = Mage::getModel('catalog/product_media_config')
+              ->getMediaUrl($product->getImage());
+        $productData['smallImageUrl'] = Mage::getModel('catalog/product_media_config')
+              ->getMediaUrl($product->getSmallImage());
+        $productData['thumbnailImageUrl'] = Mage::getModel('catalog/product_media_config')
+                   ->getMediaUrl($product->getThumbnail());
+        $productData['allImages'] = $this->getMediaGallaryImage($product);
         return $productData;
+    }
+
+    public function getMediaGallaryImage($product)
+    {
+        $galleryImages = array();
+        if (!is_object($product)) {
+            return $galleryImages;
+        }
+
+        foreach ($product->getMediaGalleryImages() as $image) {
+            $galleryImage['url'] = $image->getUrl();
+            $galleryImage['id'] = $image->getId();
+            $galleryImage['position'] = $image->getPosition();
+            $galleryImage['label'] = $image->getLabel();
+            $galleryImage['disabled'] = $image->getDisabled();
+            $galleryImages[] = $galleryImage;
+        }
+
+        return $galleryImages;
     }
 
     public function getCategoryData($category)
