@@ -190,24 +190,14 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
             return $parentProductIds;
         }
 
-        if ($childProduct->getTypeId() == "simple") {
-            $parentIds = Mage::getModel('catalog/product_type_grouped')
-                        ->getParentIdsByChild($childProduct->getId());
-            if (!$parentIds) {
-                $parentIds = Mage::getModel('catalog/product_type_configurable')
-                            ->getParentIdsByChild($childProduct->getId());
-
-                if (!$parentIds) {
-                    $parentIds = Mage::getModel('bundle/product_type')
-                                ->getParentIdsByChild($childProduct->getId());
-                }
-            }
-
-            if (isset($parentIds[0])) {
-                $parentProductIds = $parentIds;
-            }
-        }
-
+        $groupParentIds = Mage::getModel('catalog/product_type_grouped')
+                         ->getParentIdsByChild($childProduct->getId());
+        $configParentIds = Mage::getModel('catalog/product_type_configurable')
+                         ->getParentIdsByChild($childProduct->getId());
+        $bundleParentIds = Mage::getModel('bundle/product_type')
+                         ->getParentIdsByChild($childProduct->getId());
+        $parentIds = array_merge($groupParentIds, $configParentIds);
+        $parentIds = array_merge($parentIds, $bundleParentIds);
         return $parentProductIds;
     }
 
