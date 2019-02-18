@@ -216,7 +216,7 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
         }
 
         $ratingOb = Mage::getModel('rating/rating')
-                  ->getEntitySummary($reviewDetails['entity_pk_value']);
+                  ->getEntitySummary($review->getEntitPkValue());
         if (is_object($ratingOb)) {
             $reviewDetails['rating'] = $ratingOb->getSum()/$ratingOb->getCount();
         }
