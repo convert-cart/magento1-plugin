@@ -53,6 +53,7 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
             $productData = Mage::getModel('catalog/product_api')->info($product->getId(), $this->storeId);
         }
 
+        $productData['isSalable'] = $this->isSaleable($product);
         $productData['configInfo'] = $this->getConfigInfo($product);
         if ($this->showRelatedProducts != 0) {
             $productData['relatedProductIds'] = $product->getRelatedProductIds();
@@ -68,7 +69,21 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
         $productData['thumbnailImageUrl'] = Mage::getModel('catalog/product_media_config')
                    ->getMediaUrl($product->getThumbnail());
         $productData['allImages'] = $this->getMediaGallaryImage($product);
+
         return $productData;
+    }
+
+    public function isSaleable($product)
+    {
+        if (!is_object($product)) {
+            return null;
+        }
+
+        try {
+            return $product->isSalable();
+        } catch(Exception $e) {
+            return null;
+        }
     }
 
     public function getMediaGallaryImage($product)
