@@ -354,6 +354,7 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
 
         return $newsletterSubscribers;
     }
+
     public function getReviews($params)
     {
         $ccModel = Mage::getSingleton('convertcart_sync/cc');
@@ -367,5 +368,28 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         }
 
         return $productReviews;
+    }
+
+    public function getQuote($params)
+    {
+        $ccModel = Mage::getSingleton('convertcart_sync/cc');
+        $ccModel->setParams($params);
+        $quotes = Mage::getModel('sales/quote')
+        ->getCollection()
+        ->addFieldToSelect('entity_id')
+        ->addFieldToSelect('updated_at')
+        ->setOrder('updated_at', $ccModel->order)
+        ->addFieldToFilter('updated_at', array('gteq' =>$ccModel->updatedAt))
+        ->setPageSize($ccModel->limit)
+        ->setCurPage($ccModel->page);
+        $quotesdata = array();
+        foreach ($quotes as $quote) {
+            $quotedata = Mage::getModel('checkout/cart_api')->info($quote->getId());
+            unset($quotedata['password_hash']);
+            unset($quotedata['payment']);
+            $quotesdata[] = $quotedata;
+        }
+
+        return $quotesdata;
     }
 }

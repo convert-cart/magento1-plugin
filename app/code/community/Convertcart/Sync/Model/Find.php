@@ -80,6 +80,7 @@ class Convertcart_Sync_Model_Find extends Mage_Core_Model_Session_Abstract
         $categoryData = Mage::getSingleton('convertcart_sync/cc')->getCategoryData($category);
         return $categoryData;
     }
+
     public function getReview($params)
     {
         if (!isset($params['id'])) {
@@ -92,5 +93,36 @@ class Convertcart_Sync_Model_Find extends Mage_Core_Model_Session_Abstract
         $productReview = $ccModel->getReviewDetails($review);
 
         return $productReview;
+    }
+
+    public function getQuote($params)
+    {
+        if (!isset($params['id']) and !isset($params['email'])) {
+            return null;
+        }
+
+        if (isset($params['id'])) {
+            $quote = Mage::getModel('sales/quote')->load($params['id']);
+            $quotedata = $this->getQuoteDetails($quote->getId());
+        } elseif (isset($params['email'])) {
+            $quotes = Mage::getModel('sales/quote')
+            ->getCollection()
+            ->addFieldToSelect('entity_id')
+            ->addFieldToSelect('customer_email')
+            ->addFieldToSelect('updated_at')
+            ->addFieldToFilter('customer_email', $params['email']);
+            foreach ($quotes as $quote) {
+                $quotedata = $this->getQuoteDetails($quote->getId());
+            }
+        }
+
+        return $quotedata;
+    }
+
+    public function getQuoteDetails($quoteid) {
+        $quotedata = Mage::getModel('checkout/cart_api')->info($quoteid);
+        unset($quotedata['password_hash']);
+        unset($quotedata['payment']);
+        return $quotedata;
     }
 }

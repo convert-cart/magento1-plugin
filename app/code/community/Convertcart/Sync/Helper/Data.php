@@ -160,4 +160,65 @@ class Convertcart_Sync_Helper_Data extends Mage_Core_Helper_Abstract
         $version = (string)$node->modules->Convertcart_Sync->version;
         return $version;
     }
+
+    public function getCartItems($quote)
+    {
+        $cart = array();
+        if (!is_object($quote)) {
+            return $cart;
+        }
+
+        $currency = null;
+        $store = Mage::app()->getStore();
+        if (is_object($store)) {
+            $currency = $store->getCurrentCurrencyCode();
+        }
+
+        $cartItems = $quote->getAllVisibleItems();
+        foreach ($cartItems as $item) {
+            $cartItem['id'] = $item->getProductId();
+            $cartItem['name'] = str_replace("'", "", $item->getName());
+            $cartItem['price'] = Mage::helper('core')->currency($item->getPrice(), false, false);
+            $cartItem['currency'] = $currency;
+            $cartItem['quantity'] = $item->getQty();
+            $cartItem['sku'] = $item->getSku();
+            $product = $item->getProduct();
+            if (is_object($product)) {
+                $cartItem['url'] = $product->getProductUrl();
+            }
+
+            $resource = Mage::getSingleton('catalog/product')->getResource();
+            if (is_object($resource)) {
+                $resource = Mage::getSingleton('catalog/product')->getResource();
+                if (is_object($store))
+                    $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
+                    $imageUrl = $this->getImageUrl($imagePath);
+                    if ($imageUrl != null) {
+                        $cartItem['image'] = $imageUrl;
+                    }
+            }
+
+            $cart[] = $cartItem;
+        }
+
+        return $cart;
+    }
+
+    public function getImageUrl($imagePath)
+    {
+        $imageUrl = null;
+        if ($imagePath != null and $imagePath != "no_selection") {
+            $imageUrl = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $imagePath;
+        }
+
+        return $imageUrl;
+    }
+
+    public function getPrice($price)
+    {
+        if (!isset($price))
+            return 0;
+
+        return Mage::helper('core')->currency($price, false, false);
+    }
 }

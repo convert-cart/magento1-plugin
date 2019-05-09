@@ -51,6 +51,7 @@ class Convertcart_Sync_FindController extends Mage_Core_Controller_Front_Action
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
+
     public function reviewAction()
     {
         try {
@@ -61,4 +62,16 @@ class Convertcart_Sync_FindController extends Mage_Core_Controller_Front_Action
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
+
+    public function quoteAction()
+    {
+        try {
+            $params = Mage::getModel('convertcart_sync/cc')->getParams();
+            $quoteData = Mage::getModel('convertcart_sync/find')->getQuote($params);
+            Mage::Helper('convertcart_sync')->sendSuccessResponse($quoteData);
+        } catch(Exception $e) {
+            Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
+        }
+    }
+
 }
