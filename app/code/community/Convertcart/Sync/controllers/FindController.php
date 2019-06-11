@@ -32,7 +32,6 @@ class Convertcart_Sync_FindController extends Mage_Core_Controller_Front_Action
     public function catalogAction()
     {
         try {
-
             $params = Mage::getModel('convertcart_sync/cc')->getParams();
             $productData = Mage::getModel('convertcart_sync/find')->getProduct($params);
             Mage::Helper('convertcart_sync')->sendSuccessResponse($productData);
@@ -74,4 +73,14 @@ class Convertcart_Sync_FindController extends Mage_Core_Controller_Front_Action
         }
     }
 
+    public function wishlistAction()
+    {
+        try {
+            $params = Mage::getModel('convertcart_sync/cc')->getParams();
+            $wishlist = Mage::getModel('convertcart_sync/find')->getWishlist($params);
+            Mage::Helper('convertcart_sync')->sendSuccessResponse($wishlist);
+        } catch(Exception $e) {
+            Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
+        }
+    }
 }

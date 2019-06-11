@@ -178,6 +178,18 @@ class Convertcart_Analytics_Model_Observer
                 $childProducts = Mage::getModel('catalog/product_type_configurable')
                                     ->getChildrenIds($product->getId());
                 $productData['child_ids'] = $childProducts[0];
+            } else if ($productData['type'] == "bundle") {
+                $priceModel  = $product->getPriceModel();
+                if (is_object($priceModel)) {
+                    try {
+                        $pricelist = $priceModel->getTotalPrices($product, null, null, false);
+                        $productData['product_type'] = "bundle";
+                        if (isset($pricelist[0])) $productData['lowPrice'] = $pricelist[0];
+                        if (isset($pricelist[1])) $productData['highPrice'] = $pricelist[1];
+                    } catch (Error $e) {
+                        Mage::log($e->getMessage(), null, $this->logFile);
+                    }
+                }
             } else {
                 $productData['product_type'] = "simple";
             }

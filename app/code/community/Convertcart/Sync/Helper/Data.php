@@ -1,6 +1,9 @@
 <?php
 class Convertcart_Sync_Helper_Data extends Mage_Core_Helper_Abstract
 {
+    const XML_PATH_USE_PRODUCT_FLAT = 'catalog/frontend/flat_catalog_product';
+    const XML_PATH_IS_ENABLED_FLAT_CATALOG_CATEGORY = 'catalog/frontend/flat_catalog_category';
+
     public function isEnabled()
     {
         if ($this->getClientKey()) {
@@ -220,5 +223,15 @@ class Convertcart_Sync_Helper_Data extends Mage_Core_Helper_Abstract
             return 0;
 
         return Mage::helper('core')->currency($price, false, false);
+    }
+
+    public function isProductFlatEnabled()
+    {
+        return Mage::getStoreConfigFlag(self::XML_PATH_USE_PRODUCT_FLAT);
+    }
+
+    public function isCategoryFlatEnabled()
+    {
+        return Mage::getStoreConfigFlag(self::XML_PATH_IS_ENABLED_FLAT_CATALOG_CATEGORY);
     }
 }

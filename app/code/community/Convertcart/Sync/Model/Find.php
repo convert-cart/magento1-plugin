@@ -119,10 +119,42 @@ class Convertcart_Sync_Model_Find extends Mage_Core_Model_Session_Abstract
         return $quotedata;
     }
 
-    public function getQuoteDetails($quoteid) {
+    public function getQuoteDetails($quoteid)
+    {
         $quotedata = Mage::getModel('checkout/cart_api')->info($quoteid);
         unset($quotedata['password_hash']);
         unset($quotedata['payment']);
         return $quotedata;
+    }
+
+    public function getWishlist($params)
+    {
+        $i = 0;
+        try{
+       if (isset($params['customerEmailId'])) {
+        $customerId = Mage::getModel("customer/customer")
+        ->setWebsiteId(Mage::app()->getStore()->getWebsiteId())
+        ->loadByEmail($params['customerEmailId'])->getId();
+        $wishlistCollection = Mage::getModel("wishlist/wishlist")->loadByCustomer($customerId);
+        foreach ($wishlistCollection->getItemCollection() as $item) {
+            $product = $item->getProduct();
+            $itemcollection[$i++] = $product->getData();
+        }
+
+        $wishlistCollection['items'] = $itemcollection;
+       } else if (isset($params['wishlistId'])) {
+            $wishlistCollection = Mage::getModel("wishlist/wishlist")->load($params['wishlistId']);
+            foreach ($wishlistCollection->getItemCollection() as $item) {
+                $product = $item->getProduct();
+                $itemcollection[$i++] = $product->getData();
+            }
+
+            $wishlistCollection['items'] = $itemcollection;
+       }
+
+           return $wishlistCollection->getData();
+        } catch (Exception $e) {
+        return $e;
+        }
     }
 }

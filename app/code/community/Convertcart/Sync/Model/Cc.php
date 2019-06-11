@@ -11,6 +11,8 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
     public $debug = 0;
     public $subscriberId=0;
     public $queryMethod;
+    public $customerEmailId;
+    public $wishlistId;
 
     public function getProductData($product)
     {
@@ -287,9 +289,12 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
         $this->order = isset($params['order']) ? $params['order'] : 'asc';
         $this->storeId = isset($params['storeId']) ? $params['storeId'] : 1;
         $this->debug = isset($params['debug']) ? $params['debug'] : 0;
+        $this->productFlatDisabled = isset($params['productFlatDisabled']) ? $params['productFlatDisabled'] : 0;
         $this->subscriberId = isset($params['subscriberId']) ? $params['subscriberId'] : 0;
         $this->showRelatedProducts = isset($params['showRelatedProducts']) ? $params['showRelatedProducts'] : 1;
         $this->queryMethod = isset($params['queryMethod']) ? $params['queryMethod'] : 'custom';
+        $this->customerEmailId = isset($params['customerEmailId']) ? $params['customerEmailId'] : 0;
+        $this->wishlistId = isset($params['wishlistId']) ? $params['wishlistId'] : 0;
         $this->debugMode();
         $this->calculatePage();
     }

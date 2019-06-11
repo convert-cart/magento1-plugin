@@ -115,12 +115,12 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
         }
     }
 
-    public function cartAction()
+    public function quoteAction()
     {
         try {
             $params = Mage::getModel('convertcart_sync/cc')->getParams();
-            $cartdata = Mage::getModel('convertcart_sync/sync')->getQuote($params);
-            Mage::Helper('convertcart_sync')->sendSuccessResponse($cartdata);
+            $quoteData = Mage::getModel('convertcart_sync/sync')->getQuote($params);
+            Mage::Helper('convertcart_sync')->sendSuccessResponse($quoteData);
         } catch(Exception $e) {
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
