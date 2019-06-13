@@ -9,6 +9,8 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         $storeInfo['category'] = $this->getCategoryCount();
         $storeInfo['customers'] = $this->getCustomerCount();
         $storeInfo['orders'] = $this->getOrderCount();
+        $storeInfo['isProductFlatEnabled'] = Mage::Helper('convertcart_sync')->isProductFlatEnabled();
+        $storeInfo['isCategoryFlatEnabled'] = Mage::Helper('convertcart_sync')->isProductFlatEnabled();
         $storeInfo['customerConfig'] = Mage::getStoreConfig('customer/account_share/scope');
         $storeInfo['moduleVersion'] = Mage::Helper('convertcart_sync')->getModuleVersion();
         return $storeInfo;
