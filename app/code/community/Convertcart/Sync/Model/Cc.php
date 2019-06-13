@@ -49,6 +49,7 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
             }
 
             $productData['store_ids'] = $product->getStoreIds();
+            $productData['priceRange'] = $this->getPriceRange($product);
         } elseif ($this->queryMethod == 'api') { //not reliable in some magento installs/environment
             // loading model again is not optimal approach,
             // but unable to get attribute in specific stores in a particular magento install/version/environment
@@ -73,6 +74,28 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
         $productData['allImages'] = $this->getMediaGallaryImage($product);
 
         return $productData;
+    }
+
+    public function getPriceRange($product)
+    {
+        $priceRange = array();
+        if (!is_object($product)) {
+            return $priceRange;
+        }
+
+        if ($product->getTypeId() == "bundle") {
+            $priceModel  = $product->getPriceModel();
+            if (is_object($priceModel)) {
+                try {
+                    $pricelist = $priceModel->getTotalPrices($product, null, null, false);
+                    if (isset($pricelist[0])) $priceRange['lowPrice'] = $pricelist[0];
+                    if (isset($pricelist[1])) $priceRange['highPrice'] = $pricelist[1];
+                } catch (Exception $e) {
+                }
+            }
+        }
+
+        return $priceRange;
     }
 
     public function isSaleable($product)
