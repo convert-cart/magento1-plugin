@@ -585,12 +585,26 @@ class Convertcart_Analytics_Model_Observer
                 return;
             }
 
-            if (!in_array($action->getFullActionName(), array('wishlist_index_index'))) {
+            $allowedActionNames = array('wishlist_index_index', 'amlist_list_index', 'amlist_list_edit');
+            $actionName = $action->getFullActionName();
+            if (!in_array($actionName, $allowedActionNames)) {
                 return;
             }
 
-            $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("wishlistView");
-            $ccData['event_data']['items'] = Mage::getSingleton('convertcart_analytics/cc')->getWishlistItems();
+            if (in_array($actionName, array('amlist_list_index'))) {
+                $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("amastyFavoritesViewed");
+                $ccData['event_data'] = Mage::getSingleton('convertcart_analytics/cc')
+                ->getAmastyFavorites();
+            } else if (in_array($actionName, array('amlist_list_edit'))) {
+                $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("wishlistView");
+                $ccData['event_data']['type'] = 'amasty';
+                $ccData['event_data']['items'] = Mage::getSingleton('convertcart_analytics/cc')
+                ->getAmastyWishlistItems();
+            } else {
+                $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("wishlistView");
+                $ccData['event_data']['items'] = Mage::getSingleton('convertcart_analytics/cc')->getWishlistItems();
+            }
+
             $ccData['meta_data'] =  Mage::getSingleton('convertcart_analytics/cc')->insertMeta();
             $ccModel = Mage::getSingleton('convertcart_analytics/cc');
             $ccModel->storeData($ccData);
@@ -599,7 +613,7 @@ class Convertcart_Analytics_Model_Observer
         }
     }
 
-    public function removeFromWishlist($observer)
+    public function removeFromWishlist()
     {
         try {
             $ccData['event_type'] = Mage::Helper('convertcart_analytics')->getEventType("wishlistUpdated");
@@ -705,7 +719,7 @@ class Convertcart_Analytics_Model_Observer
         }
     }
 
-    public function couponInfo($observer)
+    public function couponInfo()
     {
         try {
             $quote = Mage::getSingleton('checkout/session')->getQuote();

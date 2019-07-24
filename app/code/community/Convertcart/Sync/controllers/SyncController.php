@@ -125,4 +125,15 @@ class Convertcart_Sync_SyncController extends Mage_Core_Controller_Front_Action
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
+
+    public function amastyFavoritesAction()
+    {
+        try {
+            $params = Mage::getModel('convertcart_sync/cc')->getParams();
+            $favorites = Mage::getmodel('convertcart_sync/sync')->getAmastyFavorites($params);
+            Mage::Helper('convertcart_sync')->sendSuccessResponse($favorites);
+        } catch (Exception $e) {
+            Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
+        }
+    }
 }

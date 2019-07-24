@@ -130,31 +130,47 @@ class Convertcart_Sync_Model_Find extends Mage_Core_Model_Session_Abstract
     public function getWishlist($params)
     {
         $i = 0;
-        try{
-       if (isset($params['customerEmailId'])) {
-        $customerId = Mage::getModel("customer/customer")
-        ->setWebsiteId(Mage::app()->getStore()->getWebsiteId())
-        ->loadByEmail($params['customerEmailId'])->getId();
-        $wishlistCollection = Mage::getModel("wishlist/wishlist")->loadByCustomer($customerId);
-        foreach ($wishlistCollection->getItemCollection() as $item) {
-            $product = $item->getProduct();
-            $itemcollection[$i++] = $product->getData();
-        }
+        if (isset($params['customerEmailId'])) {
+            $customerId = Mage::getModel("customer/customer")
+            ->setWebsiteId(Mage::app()->getStore()->getWebsiteId())
+            ->loadByEmail($params['customerEmailId'])->getId();
+            $wishlistModel = Mage::getModel("wishlist/wishlist");
+            if(!is_object($wishlistModel)) return array();
+            $itemcollection = array();
+            $wishlistCollection = $wishlistModel->loadByCustomer($customerId);
+            foreach ($wishlistCollection->getItemCollection() as $item) {
+                $product = $item->getProduct();
+                $itemcollection[$i++] = $product->getData();
+            }
 
         $wishlistCollection['items'] = $itemcollection;
-       } else if (isset($params['wishlistId'])) {
-            $wishlistCollection = Mage::getModel("wishlist/wishlist")->load($params['wishlistId']);
+        } else if (isset($params['wishlistId'])) {
+            $itemcollection = array();
+            $wishlistModel = Mage::getModel("wishlist/wishlist");
+            if(!is_object($wishlistModel)) return array();
+            $wishlistCollection = $wishlistModel->load($params['wishlistId']);
             foreach ($wishlistCollection->getItemCollection() as $item) {
                 $product = $item->getProduct();
                 $itemcollection[$i++] = $product->getData();
             }
 
             $wishlistCollection['items'] = $itemcollection;
-       }
-
-           return $wishlistCollection->getData();
-        } catch (Exception $e) {
-        return $e;
         }
+
+        return $wishlistCollection->getData();
+    }
+
+    public function getAmastyFavorites($params)
+    {
+        if (!isset($params['id'])) {
+            return null;
+        }
+
+        $amModel = Mage::getModel('amlist/list');
+        if(!is_object($amModel)) return array();
+        $list = $amModel->load($params['id']);
+        $ccModel = Mage::getSingleton('convertcart_sync/cc');
+        $amList = $ccModel->getAmWishlist($list);
+        return $amList;
     }
 }

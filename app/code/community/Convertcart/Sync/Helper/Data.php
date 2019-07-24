@@ -234,4 +234,9 @@ class Convertcart_Sync_Helper_Data extends Mage_Core_Helper_Abstract
     {
         return Mage::getStoreConfigFlag(self::XML_PATH_IS_ENABLED_FLAT_CATALOG_CATEGORY);
     }
+
+    public function getArrValue($array, $key)
+    {
+        return isset($array[$key]) ? $array[$key] : null;
+    }
 }

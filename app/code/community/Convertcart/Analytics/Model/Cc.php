@@ -255,6 +255,61 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         return $wishlist;
     }
 
+    public function getAmastyWishlistItems()
+    {
+
+        $ccHelper = Mage::Helper('convertcart_analytics');
+        $id = $ccHelper->sanitizeParam(Mage::app()->getRequest()->getParam('id'));
+        $wishlist = array();
+        if(!isset($id)) return $wishlist;
+        $amModel = Mage::getModel('amlist/item');
+        if (!is_object($amModel)) return $wishlist;
+        $list = $amModel->getCollection()->addFieldToFilter('list_id', $id);
+        $store = Mage::app()->getStore();
+            foreach ($list as $listItem) {
+                $wlist['id'] = $ccHelper->getArrValue($listItem, 'item_id');
+                $wlist['quantity'] = $ccHelper->getArrValue($listItem, 'qty');
+                $productId = $listItem->getProductId();
+                $resource = Mage::getSingleton('catalog/product')->getResource();
+                if (is_object($resource)) {
+                    $wlist['name'] = str_replace("'", "", $resource->getAttributeRawValue($productId, "name", $store));
+                    $wlist['url'] = Mage::helper('catalog/product')->getProductUrl($productId);
+                    $wlist['sku'] = $resource->getAttributeRawValue($productId, "sku", $store);
+                    $imagePath = $resource->getAttributeRawValue($productId, "image", $store);
+                    $imageUrl = $this->getImageUrl($imagePath);
+                    if ($imageUrl != null) {
+                        $wlist['image']= $imageUrl;
+                    }
+
+                    $wishlist[] = $wlist;
+                }
+            }
+
+       return $wishlist;
+    }
+
+    public function getAmastyFavorites()
+    {
+        $ccHelper = Mage::Helper('convertcart_analytics');
+        $amFavourite = array();
+        $amModel = Mage::getModel('amlist/list');
+        if (!is_object($amModel)) return $amFavourite;
+
+        $lists = $amModel->getCollection();
+        $amFavourite['items'] = array();
+
+        foreach ($lists as $list) {
+            $customerId = $ccHelper->getArrValue($list, 'customer_id');
+            $item['listId'] = $ccHelper->getArrValue($list, 'list_id');
+            $item['title']  = $ccHelper->getArrValue($list, 'title');
+            $item['isDefault'] = $ccHelper->getArrValue($list, 'is_default');
+            $amFavourite['items'][] = $item;
+        }
+
+        $amFavourite['customerId'] = $customerId;
+        return $amFavourite;
+    }
+
     public function customerRegisterOld()
     {
         //To support magento 1.4

@@ -291,8 +291,9 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
     {
         $ccModel = Mage::getSingleton('convertcart_sync/cc');
         $ccModel->setParams($params);
-        $wishlistCollection = Mage::getModel("wishlist/wishlist")
-                            ->getCollection()
+        $wishlistModel = Mage::getModel("wishlist/wishlist");
+        if (!is_object($wishlistModel)) return array();
+        $wishlistCollection = $wishlistModel->getCollection()
                             ->addFieldToFilter('updated_at', array('gteq' =>$ccModel->updatedAt))
                             ->setOrder('updated_at', $ccModel->order);
         $wishlistCollection = $wishlistCollection
@@ -385,5 +386,22 @@ class Convertcart_Sync_Model_Sync extends Mage_Core_Model_Session_Abstract
         }
 
         return $quotesdata;
+    }
+
+    public function getAmastyFavorites($params)
+    {
+        $favorites = array();
+        $ccModel = Mage::getSingleton('convertcart_sync/cc');
+        $ccModel->setParams($params);
+        $amModel = Mage::getModel('amlist/list');
+        if(!is_object($amModel)) return $favorites;
+        $lists = $amModel->getCollection()
+                         ->setPageSize($ccModel->limit)
+                         ->setCurPage($ccModel->page);
+        foreach ($lists as $list) {
+            $favorites[] =  $ccModel->getAmWishlist($list);
+        }
+
+        return $favorites;
     }
 }

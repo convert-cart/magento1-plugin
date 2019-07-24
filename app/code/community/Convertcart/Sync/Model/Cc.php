@@ -287,6 +287,38 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
         return $reviewDetails;
     }
 
+    public function getAmWishlist($amList)
+    {
+        $wishlist = array();
+        $ccHelper = Mage::Helper('convertcart_sync');
+        $wishlist['id'] = $ccHelper->getArrValue($amList, 'list_id');
+        $wishlist['name'] = $ccHelper->getArrValue($amList, 'title');
+        $wishlist['customerId'] = $ccHelper->getArrValue($amList, 'customer_id');
+        $wishlist['isDefault'] = $ccHelper->getArrValue($amList, 'is_default');
+        $wishlist['createdAt'] = $ccHelper->getArrValue($amList, 'created_at');
+        $amItemModel = Mage::getModel('amlist/item');
+        if(!is_object($amItemModel)) return $wishlist;
+        $amItems = $amItemModel->getCollection()
+                     ->addFieldToFilter('list_id', $amList['list_id']);
+        $wishlist['items'] = array();
+        foreach ($amItems as $amItem) {
+            $resource = Mage::getSingleton('catalog/product');
+            $productId = $amItem->getProductId();
+            if (is_object($resource)) {
+                $resource = $resource->getResource();
+                $item = array();
+                $item['itemId'] = $ccHelper->getArrValue($amItem, 'item_id');
+                $item['productId'] = $ccHelper->getArrValue($amItem, 'product_id');
+                $item['qty'] = $ccHelper->getArrValue($amItem, 'qty');
+                $item['sku'] = $resource->getAttributeRawValue($productId, "sku", $this->storeId);
+                $item['url'] = Mage::helper('catalog/product')->getProductUrl($productId);
+                $wishlist['items'][] = $item;
+            }
+        }
+
+        return $wishlist;
+    }
+
     public function debugMode()
     {
         if ($this->debug == 1) {

@@ -27,7 +27,8 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
                             'couponApplied'     =>  'couponApplied',
                             'couponDenied'      =>  'couponDenied',
                             'couponRemoved'     =>  'couponRemoved',
-                            'reviewSave'        =>  'productReviewed'
+                            'reviewSave'        =>  'productReviewed',
+                            'amastyFavoritesViewed' =>  'amastyFavoritesViewed'
                         );
         if (isset($eventMap[$event])) {
             return $eventMap[$event];
@@ -78,5 +79,10 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
     public function sanitizeParam($param)
     {
         return strip_tags($param);
+    }
+
+    public function getArrValue($array, $key)
+    {
+        return isset($array[$key]) ? $array[$key] : null;
     }
 }

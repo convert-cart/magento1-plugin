@@ -83,4 +83,15 @@ class Convertcart_Sync_FindController extends Mage_Core_Controller_Front_Action
             Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
         }
     }
+
+    public function amastyFavoritesAction()
+    {
+        try {
+            $params = Mage::getModel('convertcart_sync/cc')->getParams();
+            $favorites = Mage::getmodel('convertcart_sync/find')->getAmastyFavorites($params);
+            Mage::Helper('convertcart_sync')->sendSuccessResponse($favorites);
+        } catch (Exception $e) {
+            Mage::Helper('convertcart_sync')->sendErrorResponse($e->getMessage());
+        }
+    }
 }
