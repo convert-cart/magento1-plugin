@@ -297,9 +297,11 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         $ccHelper = Mage::Helper('convertcart_analytics');
         $amFavourite = array();
         $amModel = Mage::getModel('amlist/list');
+        $customerSessionModel = Mage::getSingleton('customer/session');
         if (!is_object($amModel)) return $amFavourite;
-
-        $lists = $amModel->getCollection();
+        if (!$customerSessionModel->isLoggedIn()) return $amFavourite;
+        $customerID = $customerSessionModel->getId();
+        $lists = $amModel->getCollection()->addFieldToFilter('customer_id', $customerID);
         $amFavourite['items'] = array();
 
         foreach ($lists as $list) {
