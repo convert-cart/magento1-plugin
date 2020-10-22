@@ -56,6 +56,16 @@ class Convertcart_Analytics_Helper_Data extends Mage_Core_Helper_Abstract
         }
     }
 
+    public function getScriptDomain()
+    {
+        $scriptDomain = Mage::getStoreConfig('convertcart/config/script_domain');
+        if (!isset($scriptDomain) or $scriptDomain == '') {
+            return 'cdn.convertcart.com';
+        } else {
+            return $scriptDomain;
+        }
+    }
+
     public function getModuleVersion()
     {
         $config = Mage::getConfig();

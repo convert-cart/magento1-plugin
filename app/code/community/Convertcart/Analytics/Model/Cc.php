@@ -16,12 +16,14 @@ class Convertcart_Analytics_Model_Cc extends Mage_Core_Model_Session_Abstract
         if (Mage::Helper('convertcart_analytics')->isEnabled() == false) //dont proceed if not enabled
             return;
 
+        $scriptDomain = Mage::Helper('convertcart_analytics')->getScriptDomain();
         $clientKey = Mage::Helper('convertcart_analytics')->getClientKey();
         if (!isset($clientKey))
             return ;
 
         $script = Mage::app()->getLayout()->createBlock('core/template')
                   ->setClientKey($clientKey)
+                  ->setScriptDomain($scriptDomain)
                   ->setTemplate('convertcart/init.phtml');
         return $script;
     }
