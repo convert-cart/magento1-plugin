@@ -188,7 +188,7 @@ class Convertcart_Sync_Model_Cc extends Mage_Core_Model_Session_Abstract
         $configArray['basePrice'] = $product->getFinalPrice();
         $configArray['options'] = array();
         foreach ($attributes as $attribute) {
-            $configArray['options'] = array_merge($configArray['options'], $attribute->getPrices());
+            $configArray['options'] = array_merge(is_array($configArray['options']) ? $configArray['options'] : [], is_array($attribute->getPrices()) ? $attribute->getPrices() : []);
         }
 
         $configArray['children'] = array();
