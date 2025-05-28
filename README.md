@@ -47,7 +47,7 @@ To uninstall the plugin:
 3. Clear Magento cache.
 
 ## Contact
-For help or questions, contact [Convert Cart Support](https://www.convertcart.com/contact) or email support@convertcart.com.
+Please contact sales@convertcart.com if any issues occur during the integration process.
 
 ## License
 This plugin is proprietary and provided by Convert Cart. All rights reserved.
