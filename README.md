@@ -24,27 +24,32 @@ Welcome to the Magento 1 Plugin by Convert Cart. This plugin integrates seamless
 4. **Upload** the contents to your Magento root directory, merging folders when prompted.
 5. **Clear Cache:** In your Magento admin panel, go to `System > Cache Management` and refresh/flush all caches.
 6. **Logout & Login:** Log out and log back in to your Magento admin panel.
-7. **Enable Modules:**
-   - Go to `System > Configuration > Advanced > Advanced` and ensure `Convertcart_Analytics` and `Convertcart_Sync` are enabled.
+7. **Enable Module:**
+   - Go to `System > Configuration > Advanced > Advanced` and ensure `Convertcart` is enabled (the unified module replaces the old Analytics and Sync modules).
 
 ## Configuration
-1. In your Magento admin, go to `System > Configuration > Convertcart` (usually in the left menu).
+1. In your Magento admin, go to `System > Configuration > Convertcart` (left menu).
 2. Enter your Convert Cart API credentials (provided by Convert Cart support or your dashboard).
-3. Adjust any additional settings as needed.
+3. Adjust analytics and sync settings as needed. All features are now managed from this unified section.
 4. Save the configuration.
 
 ## Troubleshooting
 If you encounter issues, try the following steps:
-1. Ensure the modules are enabled: Go to `System > Configuration > Advanced > Advanced` and check for `Convertcart_Analytics` and `Convertcart_Sync`.
+1. Ensure the module is enabled: Go to `System > Configuration > Advanced > Advanced` and check for `Convertcart` (the unified module).
 2. Clear Magento cache: `System > Cache Management`.
 3. Check the Magento `var/log` directory for any error messages.
 4. If the issue persists, contact Convert Cart support.
 
 ## Uninstall
 To uninstall the plugin:
-1. Disable the modules in `System > Configuration > Advanced > Advanced`.
-2. Remove the `Convertcart` folders from `app/code/community/`, and the related XML files from `app/etc/modules/`.
+1. Disable the module in `System > Configuration > Advanced > Advanced` (look for `Convertcart`).
+2. Remove the `Convertcart` folder from `app/code/community/` and the related XML file from `app/etc/modules/`.
 3. Clear Magento cache.
+
+## Versioning & Migration
+- As of v1.5.0, Analytics and Sync are unified into a single Convertcart module.
+- If you previously used `Convertcart_Analytics` or `Convertcart_Sync`, remove those modules before installing/upgrading to this version.
+- All configuration and tracking now reside under the unified module.
 
 ## Contact
 Please contact sales@convertcart.com if any issues occur during the integration process.
