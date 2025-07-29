@@ -1,4 +1,5 @@
 <?php
+
 class Convertcart_Helper_Sync extends Mage_Core_Helper_Abstract
 {
     const XML_PATH_USE_PRODUCT_FLAT = 'catalog/frontend/flat_catalog_product';
@@ -31,7 +32,6 @@ class Convertcart_Helper_Sync extends Mage_Core_Helper_Abstract
         } else {
             return $apiKey;
         }
-
     }
 
     public function getResetApiKey()
@@ -84,7 +84,7 @@ class Convertcart_Helper_Sync extends Mage_Core_Helper_Abstract
     {
         $apiKey = $this->getApiKey();
         $resetApiKey = $this->getResetApiKey();
-        if ((!isset($apiKey) or $apiKey == '') or $resetApiKey ) {
+        if ((!isset($apiKey) or $apiKey == '') or $resetApiKey) {
             try {
                 $apiKey = md5(uniqid(rand(), true));
                 Mage::getConfig()->saveConfig('convertcart/config/api_key', $apiKey, 'default', 0);
@@ -95,8 +95,7 @@ class Convertcart_Helper_Sync extends Mage_Core_Helper_Abstract
                         Mage::helper('adminhtml')->__('ConvertCart Api key generated successfully')
                     );
                 }
-            }
-            catch (Mage_Core_Exception $e) {
+            } catch (Mage_Core_Exception $e) {
                 Mage::getSingleton('adminhtml/session')->addError(
                     Mage::helper('adminhtml')->__('Unable to reset api key')
                 );
@@ -123,13 +122,20 @@ class Convertcart_Helper_Sync extends Mage_Core_Helper_Abstract
         }
     }
 
+    /**
+     * Throw an exception for unauthorized access
+     *
+     * @throws Mage_Core_Exception
+     */
     public function accessDenied()
     {
-        Mage::app()->getResponse()
-            ->setHeader('HTTP/1.1', '401 Unauthorized')
-            ->setBody('<h1>401 Unauthorized - Invalid Credentials</h1>')
-            ->sendResponse();
-        exit;
+        $response = Mage::app()->getResponse();
+        $response->setHeader('HTTP/1.1', '401 Unauthorized')
+                ->setBody('<h1>401 Unauthorized - Invalid Credentials</h1>')
+                ->sendResponse();
+                
+        // Instead of exit, throw an exception that can be caught and handled properly
+        throw new Mage_Core_Exception('Unauthorized access', 401);
     }
 
     public function sendErrorResponse($errorMessage = 'Some Error Occurred')
@@ -164,6 +170,12 @@ class Convertcart_Helper_Sync extends Mage_Core_Helper_Abstract
         return $version;
     }
 
+    /**
+     * Get cart items data from quote
+     *
+     * @param Mage_Sales_Model_Quote $quote
+     * @return array
+     */
     public function getCartItems($quote)
     {
         $cart = array();
@@ -179,26 +191,31 @@ class Convertcart_Helper_Sync extends Mage_Core_Helper_Abstract
 
         $cartItems = $quote->getAllVisibleItems();
         foreach ($cartItems as $item) {
-            $cartItem['id'] = $item->getProductId();
-            $cartItem['name'] = str_replace("'", "", $item->getName());
-            $cartItem['price'] = Mage::helper('convertcart/sync_cc')->currency($item->getPrice(), false, false);
-            $cartItem['currency'] = $currency;
-            $cartItem['quantity'] = $item->getQty();
-            $cartItem['sku'] = $item->getSku();
+            $cartItem = array(
+                'id' => $item->getProductId(),
+                'name' => str_replace("'", "", $item->getName()),
+                'price' => Mage::helper('convertcart/sync_cc')->currency($item->getPrice(), false, false),
+                'currency' => $currency,
+                'quantity' => $item->getQty(),
+                'sku' => $item->getSku()
+            );
+
+            // Add product URL if available
             $product = $item->getProduct();
             if (is_object($product)) {
                 $cartItem['url'] = $product->getProductUrl();
             }
 
+            // Add product image if available
             $resource = Mage::getSingleton('catalog/product')->getResource();
-            if (is_object($resource)) {
-                $resource = Mage::getSingleton('catalog/product')->getResource();
-                if (is_object($store))
-                    $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
+            if (is_object($resource) && is_object($store)) {
+                $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
+                if ($imagePath) {
                     $imageUrl = $this->getImageUrl($imagePath);
-                    if ($imageUrl != null) {
+                    if ($imageUrl !== null) {
                         $cartItem['image'] = $imageUrl;
                     }
+                }
             }
 
             $cart[] = $cartItem;
@@ -219,8 +236,9 @@ class Convertcart_Helper_Sync extends Mage_Core_Helper_Abstract
 
     public function getPrice($price)
     {
-        if (!isset($price))
+        if (!isset($price)) {
             return 0;
+        }
 
         return Mage::helper('convertcart/sync_cc')->currency($price, false, false);
     }

@@ -57,7 +57,7 @@ class Convertcart_Model_Sync_FindController extends Mage_Core_Controller_Front_A
             $params = Mage::getModel('convertcart/sync_cc')->getParams();
             $reviewData = Mage::getModel('convertcart/sync_cc_find')->getReview($params);
             Mage::Helper('convertcart/sync_cc')->sendSuccessResponse($reviewData);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             Mage::Helper('convertcart/sync_cc')->sendErrorResponse($e->getMessage());
         }
     }
@@ -68,7 +68,7 @@ class Convertcart_Model_Sync_FindController extends Mage_Core_Controller_Front_A
             $params = Mage::getModel('convertcart/sync_cc')->getParams();
             $quoteData = Mage::getModel('convertcart/sync_cc_find')->getQuote($params);
             Mage::Helper('convertcart/sync_cc')->sendSuccessResponse($quoteData);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             Mage::Helper('convertcart/sync_cc')->sendErrorResponse($e->getMessage());
         }
     }
@@ -79,7 +79,7 @@ class Convertcart_Model_Sync_FindController extends Mage_Core_Controller_Front_A
             $params = Mage::getModel('convertcart/sync_cc')->getParams();
             $wishlist = Mage::getModel('convertcart/sync_cc_find')->getWishlist($params);
             Mage::Helper('convertcart/sync_cc')->sendSuccessResponse($wishlist);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             Mage::Helper('convertcart/sync_cc')->sendErrorResponse($e->getMessage());
         }
     }

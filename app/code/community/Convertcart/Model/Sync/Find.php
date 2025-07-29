@@ -134,7 +134,9 @@ class Convertcart_Model_Sync_Find extends Mage_Core_Model_Session_Abstract
             ->setWebsiteId(Mage::app()->getStore()->getWebsiteId())
             ->loadByEmail($params['customerEmailId'])->getId();
             $wishlistModel = Mage::getModel("wishlist/wishlist");
-            if(!is_object($wishlistModel)) return array();
+            if (!is_object($wishlistModel)) {
+                return array();
+            }
             $itemcollection = array();
             $wishlistCollection = $wishlistModel->loadByCustomer($customerId);
             foreach ($wishlistCollection->getItemCollection() as $item) {
@@ -142,11 +144,13 @@ class Convertcart_Model_Sync_Find extends Mage_Core_Model_Session_Abstract
                 $itemcollection[$i++] = $product->getData();
             }
 
-        $wishlistCollection['items'] = $itemcollection;
-        } else if (isset($params['wishlistId'])) {
+            $wishlistCollection['items'] = $itemcollection;
+        } elseif (isset($params['wishlistId'])) {
             $itemcollection = array();
             $wishlistModel = Mage::getModel("wishlist/wishlist");
-            if(!is_object($wishlistModel)) return array();
+            if (!is_object($wishlistModel)) {
+                return array();
+            }
             $wishlistCollection = $wishlistModel->load($params['wishlistId']);
             foreach ($wishlistCollection->getItemCollection() as $item) {
                 $product = $item->getProduct();
@@ -166,7 +170,9 @@ class Convertcart_Model_Sync_Find extends Mage_Core_Model_Session_Abstract
         }
 
         $amModel = Mage::getModel('amlist/list');
-        if(!is_object($amModel)) return array();
+        if (!is_object($amModel)) {
+            return array();
+        }
         $list = $amModel->load($params['id']);
         $ccModel = Mage::getSingleton('convertcart_sync/cc');
         $amList = $ccModel->getAmWishlist($list);

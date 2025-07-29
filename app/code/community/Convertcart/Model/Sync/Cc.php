@@ -14,83 +14,203 @@ class Convertcart_Model_Sync_Cc extends Mage_Core_Model_Session_Abstract
     public $customerEmailId;
     public $wishlistId;
 
+    /**
+     * Get product data based on query method
+     *
+     * @param Mage_Catalog_Model_Product $product
+     * @return array
+     */
     public function getProductData($product)
     {
         if (!is_object($product)) {
-            return;
+            return [];
         }
 
-        if ($this->queryMethod == 'custom') {
-            $product->setStoreId($this->storeId);
-            $attributes = $product->getAttributes();
-            $productData['product_id'] = $product->getId();
-            foreach ($attributes as $attribute) {
-                $attributeCode = $attribute->getAttributeCode();
-                $frontendInput = $attribute->getFrontendInput();
-                if ($frontendInput == 'multiselect' or $frontendInput == 'select') {
-                    $productData[$attributeCode] = $product->getAttributeText($attributeCode);
-                } else {
-                    $productData[$attributeCode] = $product->getData($attributeCode);
-                }
-            }
-
-            $productData['category_ids'] = $product->getCategoryIds();
-            $productData['childProductIds'] = $this->getChildProductIds($product);
-            $productData['final_price'] = $product->getFinalPrice();
-            $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
-            $productData['stock_data'] = $stock->getData();
-            $productData['store_url'] = $product->getProductUrl();
-            $productData['url'] = Mage::app()->getStore($this->storeId)
-                                ->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK).$product->getUrlPath();
-            if ($product->getImage() != null and $product->getImage() != 'no_selection') {
-                $productData['image_url'] = Mage::app()->getStore($this->storeId)
-                                            ->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA);
-                $productData['image_url'].= 'catalog/product' . $product->getImage();
-            }
-
-            $productData['store_ids'] = $product->getStoreIds();
-            $productData['priceRange'] = $this->getPriceRange($product);
-        } elseif ($this->queryMethod == 'api') {
-            $productData = Mage::getModel('catalog/product_api')->info($product->getId(), $this->storeId);
+        // Get base product data based on query method
+        $productData = $this->getBaseProductData($product);
+        if (empty($productData)) {
+            return [];
         }
 
+        // Add additional product information
+        $this->addProductRelatedData($product, $productData);
+        $this->addProductMediaData($product, $productData);
+        $this->addProductRelations($product, $productData);
+
+        return $productData;
+    }
+
+    /**
+     * Get base product data based on query method
+     *
+     * @param Mage_Catalog_Model_Product $product
+     * @return array
+     */
+    protected function getBaseProductData($product)
+    {
+        if ($this->queryMethod === 'api') {
+            return Mage::getModel('catalog/product_api')->info($product->getId(), $this->storeId);
+        }
+        
+        return $this->getCustomProductData($product);
+    }
+
+    /**
+     * Get product data using custom query method
+     *
+     * @param Mage_Catalog_Model_Product $product
+     * @return array
+     */
+    protected function getCustomProductData($product)
+    {
+        $product->setStoreId($this->storeId);
+        $productData = [
+            'product_id' => $product->getId(),
+            'category_ids' => $product->getCategoryIds(),
+            'childProductIds' => $this->getChildProductIds($product),
+            'final_price' => $product->getFinalPrice(),
+            'store_url' => $product->getProductUrl(),
+            'url' => Mage::app()->getStore($this->storeId)
+                ->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK) . $product->getUrlPath(),
+            'store_ids' => $product->getStoreIds(),
+            'priceRange' => $this->getPriceRange($product)
+        ];
+
+        // Add stock data
+        $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
+        $productData['stock_data'] = $stock->getData();
+
+        // Add product attributes
+        $this->addProductAttributes($product, $productData);
+
+        // Add image URL if available
+        $this->addProductImageUrl($product, $productData);
+
+        return $productData;
+    }
+
+    /**
+     * Add product attributes to product data
+     *
+     * @param Mage_Catalog_Model_Product $product
+     * @param array &$productData
+     * @return void
+     */
+    protected function addProductAttributes($product, &$productData)
+    {
+        $attributes = $product->getAttributes();
+        foreach ($attributes as $attribute) {
+            $attributeCode = $attribute->getAttributeCode();
+            $frontendInput = $attribute->getFrontendInput();
+            $productData[$attributeCode] = in_array($frontendInput, ['multiselect', 'select'])
+                ? $product->getAttributeText($attributeCode)
+                : $product->getData($attributeCode);
+        }
+    }
+
+    /**
+     * Add product image URL to product data
+     *
+     * @param Mage_Catalog_Model_Product $product
+     * @param array &$productData
+     * @return void
+     */
+    protected function addProductImageUrl($product, &$productData)
+    {
+        $image = $product->getImage();
+        if (!empty($image) && $image !== 'no_selection') {
+            $productData['image_url'] = Mage::app()->getStore($this->storeId)
+                ->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA)
+                . 'catalog/product' . $image;
+        }
+    }
+
+    /**
+     * Add product related data
+     *
+     * @param Mage_Catalog_Model_Product $product
+     * @param array &$productData
+     * @return void
+     */
+    protected function addProductRelatedData($product, &$productData)
+    {
         $productData['isSalable'] = $this->isSaleable($product);
         $productData['configInfo'] = $this->getConfigInfo($product);
+        $productData['parentProductIds'] = $this->getParentProductIds($product);
+    }
+
+    /**
+     * Add product media data
+     *
+     * @param Mage_Catalog_Model_Product $product
+     * @param array &$productData
+     * @return void
+     */
+    protected function addProductMediaData($product, &$productData)
+    {
+        $mediaConfig = Mage::getModel('catalog/product_media_config');
+        $productData['baseImageUrl'] = $mediaConfig->getMediaUrl($product->getImage());
+        $productData['smallImageUrl'] = $mediaConfig->getMediaUrl($product->getSmallImage());
+        $productData['thumbnailImageUrl'] = $mediaConfig->getMediaUrl($product->getThumbnail());
+        $productData['allImages'] = $this->getMediaGallaryImage($product);
+    }
+
+    /**
+     * Add product relations (related, cross-sell, up-sell)
+     *
+     * @param Mage_Catalog_Model_Product $product
+     * @param array &$productData
+     * @return void
+     */
+    protected function addProductRelations($product, &$productData)
+    {
         if ($this->showRelatedProducts != 0) {
             $productData['relatedProductIds'] = $product->getRelatedProductIds();
             $productData['crossSellProductIds'] = $product->getCrossSellProductIds();
             $productData['upSellProductIds'] = $product->getUpSellProductIds();
         }
-
-        $productData['parentProductIds'] = $this->getParentProductIds($product);
-        $productData['baseImageUrl'] = Mage::getModel('catalog/product_media_config')
-              ->getMediaUrl($product->getImage());
-        $productData['smallImageUrl'] = Mage::getModel('catalog/product_media_config')
-              ->getMediaUrl($product->getSmallImage());
-        $productData['thumbnailImageUrl'] = Mage::getModel('catalog/product_media_config')
-                   ->getMediaUrl($product->getThumbnail());
-        $productData['allImages'] = $this->getMediaGallaryImage($product);
-
-        return $productData;
     }
 
+    /**
+     * Get price range for a product
+     *
+     * @param Mage_Catalog_Model_Product $product
+     * @return array
+     */
     public function getPriceRange($product)
     {
-        $priceRange = array();
-        if (!is_object($product)) {
+        $priceRange = [];
+        if (!is_object($product) || $product->getTypeId() !== 'bundle') {
             return $priceRange;
         }
 
-        if ($product->getTypeId() == "bundle") {
-            $priceModel  = $product->getPriceModel();
-            if (is_object($priceModel)) {
-                try {
-                    $pricelist = $priceModel->getTotalPrices($product, null, null, false);
-                    if (isset($pricelist[0])) $priceRange['lowPrice'] = $pricelist[0];
-                    if (isset($pricelist[1])) $priceRange['highPrice'] = $pricelist[1];
-                } catch (Exception $e) {
+        $priceModel = $product->getPriceModel();
+        if (!is_object($priceModel)) {
+            return $priceRange;
+        }
+
+        try {
+            $pricelist = $priceModel->getTotalPrices($product, null, null, false);
+            
+            if (is_array($pricelist)) {
+                if (isset($pricelist[0])) {
+                    $priceRange['lowPrice'] = (float) $pricelist[0];
+                }
+                if (isset($pricelist[1])) {
+                    $priceRange['highPrice'] = (float) $pricelist[1];
                 }
             }
+        } catch (Exception $e) {
+            // Log the exception for debugging purposes
+            Mage::logException($e);
+            
+            // Optionally log a custom message
+            $message = sprintf(
+                'Error getting price range for product ID %s: %s',
+                $product->getId(),
+                $e->getMessage()
+            );
+            Mage::log($message, Zend_Log::ERR, 'convertcart_sync.log', true);
         }
 
         return $priceRange;
@@ -104,7 +224,7 @@ class Convertcart_Model_Sync_Cc extends Mage_Core_Model_Session_Abstract
 
         try {
             return $product->isSalable();
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             return null;
         }
     }
@@ -124,6 +244,7 @@ class Convertcart_Model_Sync_Cc extends Mage_Core_Model_Session_Abstract
         }
 
         foreach ($mediaGallery as $image) {
+            $galleryImage = array();
             $galleryImage['url'] = $image->getUrl();
             $galleryImage['id'] = $image->getId();
             $galleryImage['position'] = $image->getPosition();
@@ -164,7 +285,7 @@ class Convertcart_Model_Sync_Cc extends Mage_Core_Model_Session_Abstract
             $categoryData['include_in_menu'] = $category->getData('include_in_menu');
             $categoryData['created_at'] = $category->getData('created_at');
             $categoryData['updated_at'] = $category->getData('updated_at');
-        } elseif ($this->queryMethod == 'api') { 
+        } elseif ($this->queryMethod == 'api') {
             $categoryData = Mage::getModel('catalog/category_api')->info($category->getId(), $this->storeId);
         }
 
@@ -186,7 +307,10 @@ class Convertcart_Model_Sync_Cc extends Mage_Core_Model_Session_Abstract
         $configArray['basePrice'] = $product->getFinalPrice();
         $configArray['options'] = array();
         foreach ($attributes as $attribute) {
-            $configArray['options'] = array_merge(is_array($configArray['options']) ? $configArray['options'] : [], is_array($attribute->getPrices()) ? $attribute->getPrices() : []);
+            $configArray['options'] = array_merge(
+                is_array($configArray['options']) ? $configArray['options'] : [],
+                is_array($attribute->getPrices()) ? $attribute->getPrices() : []
+            );
         }
 
         $configArray['children'] = array();
@@ -219,31 +343,43 @@ class Convertcart_Model_Sync_Cc extends Mage_Core_Model_Session_Abstract
             $ids = $parentProduct->getTypeInstance()
                     ->getChildrenIds($parentProduct->getId());
             foreach ($ids as $optionId => $children) {
-                foreach ($children as $id => $childId) {
-                    $childProductIds[$optionId][] = $childId;
-                }
+                // Use array_values to get just the values without keys
+                $childProductIds[$optionId] = array_values($children);
             }
         }
 
         return $childProductIds;
     }
 
+    /**
+     * Get parent product IDs for a child product
+     *
+     * @param Mage_Catalog_Model_Product $childProduct
+     * @return array
+     */
     public function getParentProductIds($childProduct)
     {
-        $parentProductIds = array();
         if (!is_object($childProduct)) {
-            return $parentProductIds;
+            return [];
         }
 
         $groupParentIds = Mage::getModel('catalog/product_type_grouped')
-                         ->getParentIdsByChild($childProduct->getId());
+            ->getParentIdsByChild($childProduct->getId());
+            
         $configParentIds = Mage::getModel('catalog/product_type_configurable')
-                         ->getParentIdsByChild($childProduct->getId());
+            ->getParentIdsByChild($childProduct->getId());
+            
         $bundleParentIds = Mage::getModel('bundle/product_type')
-                         ->getParentIdsByChild($childProduct->getId());
-        $parentIds = array_merge($groupParentIds, $configParentIds);
-        $parentIds = array_merge($parentIds, $bundleParentIds);
-        return $parentProductIds;
+            ->getParentIdsByChild($childProduct->getId());
+
+        // Merge all parent IDs and remove duplicates
+        return array_unique(
+            array_merge(
+                is_array($groupParentIds) ? $groupParentIds : [],
+                is_array($configParentIds) ? $configParentIds : [],
+                is_array($bundleParentIds) ? $bundleParentIds : []
+            )
+        );
     }
 
     public function getReviewDetails($review)
@@ -274,9 +410,9 @@ class Convertcart_Model_Sync_Cc extends Mage_Core_Model_Session_Abstract
         $reviewDetails['statusId'] = $review->getStatusId();
         if ($review->getStatusId() == 1) {
             $reviewDetails['status'] = 'approved';
-        } else if ($review->getStatusId() == 2) {
+        } elseif ($review->getStatusId() == 2) {
             $reviewDetails['status'] = 'pending';
-        } else if ($review->getStatusId() == 3) {
+        } elseif ($review->getStatusId() == 3) {
             $reviewDetails['status'] = 'rejected';
         } else {
             $reviewDetails['status'] = 'other';
@@ -295,7 +431,9 @@ class Convertcart_Model_Sync_Cc extends Mage_Core_Model_Session_Abstract
         $wishlist['isDefault'] = $ccHelper->getArrValue($amList, 'is_default');
         $wishlist['createdAt'] = $ccHelper->getArrValue($amList, 'created_at');
         $amItemModel = Mage::getModel('amlist/item');
-        if(!is_object($amItemModel)) return $wishlist;
+        if (!is_object($amItemModel)) {
+            return $wishlist;
+        }
         $amItems = $amItemModel->getCollection()
                      ->addFieldToFilter('list_id', $amList['list_id']);
         $wishlist['items'] = array();
@@ -334,22 +472,70 @@ class Convertcart_Model_Sync_Cc extends Mage_Core_Model_Session_Abstract
         }
     }
 
+    /**
+     * Set parameters for the sync operation
+     *
+     * @param array $params Array of parameters to set
+     * @return void
+     */
     public function setParams($params)
     {
-        $this->updatedAt = isset($params['updatedAt']) ? str_ireplace("T", " ", $params['updatedAt']) : '2011-07-29 00:00:00';
-        $this->limit = isset($params['limit']) ? $params['limit'] : 5;
-        $this->offset = isset($params['offset']) ? $params['offset'] : 0;
-        $this->order = isset($params['order']) ? $params['order'] : 'asc';
-        $this->storeId = isset($params['storeId']) ? $params['storeId'] : 1;
-        $this->debug = isset($params['debug']) ? $params['debug'] : 0;
-        $this->productFlatDisabled = isset($params['productFlatDisabled']) ? $params['productFlatDisabled'] : 0;
-        $this->subscriberId = isset($params['subscriberId']) ? $params['subscriberId'] : 0;
-        $this->showRelatedProducts = isset($params['showRelatedProducts']) ? $params['showRelatedProducts'] : 1;
-        $this->queryMethod = isset($params['queryMethod']) ? $params['queryMethod'] : 'custom';
-        $this->customerEmailId = isset($params['customerEmailId']) ? $params['customerEmailId'] : 0;
-        $this->wishlistId = isset($params['wishlistId']) ? $params['wishlistId'] : 0;
+        if (!is_array($params)) {
+            $params = [];
+        }
+
+        // Define default values for all parameters
+        $defaults = [
+            'updatedAt' => '2011-07-29 00:00:00',
+            'limit' => 5,
+            'offset' => 0,
+            'order' => 'asc',
+            'storeId' => 1,
+            'debug' => 0,
+            'productFlatDisabled' => 0,
+            'subscriberId' => 0,
+            'showRelatedProducts' => 1,
+            'queryMethod' => 'custom',
+            'customerEmailId' => 0,
+            'wishlistId' => 0
+        ];
+
+        // Process updatedAt separately as it requires special handling
+        $this->updatedAt = isset($params['updatedAt'])
+            ? str_ireplace("T", " ", $params['updatedAt'])
+            : $defaults['updatedAt'];
+
+        // Set all other parameters using a helper method
+        $this->setParameter($params, 'limit', $defaults['limit']);
+        $this->setParameter($params, 'offset', $defaults['offset']);
+        $this->setParameter($params, 'order', $defaults['order']);
+        $this->setParameter($params, 'storeId', $defaults['storeId']);
+        $this->setParameter($params, 'debug', $defaults['debug']);
+        $this->setParameter($params, 'productFlatDisabled', $defaults['productFlatDisabled']);
+        $this->setParameter($params, 'subscriberId', $defaults['subscriberId']);
+        $this->setParameter($params, 'showRelatedProducts', $defaults['showRelatedProducts']);
+        $this->setParameter($params, 'queryMethod', $defaults['queryMethod']);
+        $this->setParameter($params, 'customerEmailId', $defaults['customerEmailId']);
+        $this->setParameter($params, 'wishlistId', $defaults['wishlistId']);
+
         $this->debugMode();
         $this->calculatePage();
+    }
+
+    /**
+     * Helper method to set a single parameter with a default value
+     *
+     * @param array $params Source parameters
+     * @param string $key Parameter key
+     * @param mixed $default Default value
+     * @return void
+     */
+    protected function setParameter($params, $key, $default)
+    {
+        $property = lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
+        if (property_exists($this, $property)) {
+            $this->$property = isset($params[$key]) ? $params[$key] : $default;
+        }
     }
 
     public function getParams()

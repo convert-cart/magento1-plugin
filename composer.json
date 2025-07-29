@@ -1,0 +1,22 @@
+{
+    "name": "convertcart/magento1-plugin",
+    "description": "ConvertCart Magento 1 Integration",
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.7",
+        "magento-ecg/coding-standard": "^4.5",
+        "phpmd/phpmd": "^2.13",
+        "friendsofphp/php-cs-fixer": "^3.0"
+    },
+    "scripts": {
+        "lint": "find app/code/community/Convertcart -name '*.php' -type f -exec php -l {} \\; | grep -v 'No syntax errors' || true",
+        "cs-check": "phpcs --standard=phpcs.xml",
+        "cs-fix": "phpcbf --standard=phpcs.xml",
+        "phpmd": "phpmd app/code/community/Convertcart text phpmd-minimal.xml",
+        "phpmd-full": "phpmd app/code/community/Convertcart text phpmd.xml",
+        "check": [
+            "@lint",
+            "@cs-check",
+            "@phpmd"
+        ]
+    }
+}

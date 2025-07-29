@@ -22,6 +22,7 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
                     ->getCollection()
                     ->addAttributeToSelect('id');
 
+        $customers = array();
         $customers['total_customers'] = $collection->getSize();
         return $customers;
     }
@@ -31,6 +32,7 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
         $collection = Mage::getModel('sales/order')
                     ->getCollection()
                     ->addAttributeToSelect('entity_id');
+        $orders = array();
         $orders['total_orders'] = $collection->getSize();
         return $orders;
     }
@@ -40,6 +42,7 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
         $collection = Mage::getModel('catalog/product')
                     ->getCollection()
                     ->addAttributeToSelect('entity_id');
+        $products = array();
         $products['total_products'] = $collection->getSize();
         return $products;
     }
@@ -50,12 +53,14 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
                     ->getCollection()
                     ->addAttributeToSelect('entity_id');
 
+        $categories = array();
         $categories['total_categories'] = $collection->getSize();
         return $categories;
     }
 
     public function getBaseUrl($storeId)
     {
+        $url = array();
         $url['base_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_DIRECT_LINK);
         $url['base_link_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_LINK);
         $url['base_skin_url'] = Mage::app()->getStore($storeId)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_SKIN);
@@ -67,11 +72,13 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
     public function getWebsitesData()
     {
         $websiteCount = 0;
+        $allWebsite = array();
         foreach (Mage::app()->getWebsites() as $website) {
             $storeCount = 0;
             $storeData = array();
             $allStore = array();
             $websiteCount++;
+            $websiteData = array();
             $websiteData['website_id'] = $website->getId();
             $websiteData['website_code'] = $website->getCode();
             $websiteData['website_name'] = $website->getName();
@@ -79,6 +86,7 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
                 $stores = $group->getStores();
                 foreach ($stores as $store) {
                     $storeCount++;
+                    $storeData = array();
                     $storeData['store_id'] = $store->getId();
                     $storeData['store_code'] = $store->getCode();
                     $storeData['store_name'] = $store->getName();
@@ -90,30 +98,25 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
                             $allowedCurrencies
                         );
                     } else {
-                        $storeData['allowed_currencies'] = $allowedCurrencies;
+                        $storeData['allowed_currencies'] = array();
                     }
-
                     $storeData['url'] = $this->getBaseUrl($store->getId());
                     $allStore[] = $storeData;
                 }
             }
-
-            $websiteData['total_stores'] = $storeCount;
             $websiteData['stores'] = $allStore;
-            $allWebsite[] =  $websiteData;
+            $websiteData['store_count'] = $storeCount;
+            $allWebsite[] = $websiteData;
         }
 
-        $websites = array();
-        $websites['total_websites'] = $websiteCount;
-        $websites['data'] = $allWebsite;
-        return $websites;
+        return $allWebsite;
     }
 
     public function getCurrencyInfo()
     {
         $currencyModel = Mage::getModel('directory/currency');
         if (!is_object($currencyModel)) {
-            return;
+            return array(); // Return empty array instead of null
         }
 
         $currencies = $currencyModel->getConfigAllowCurrencies();
@@ -122,8 +125,13 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
         $rates = $currencyModel->getCurrencyRates($defaultCurrencies, $currencies);
         $currencyData = array();
         $currencyData['base_currency'] = $baseCurrencyCode;
-        foreach ($rates[$baseCurrencyCode] as $key=>$value  ) {
-            $currencyData['rate'][$key] = $value;
+        $currencyData['rate'] = array(); // Initialize rate array
+        
+        // Check if rates exist for base currency before iterating
+        if (isset($rates[$baseCurrencyCode]) && is_array($rates[$baseCurrencyCode])) {
+            foreach ($rates[$baseCurrencyCode] as $key => $value) {
+                $currencyData['rate'][$key] = $value;
+            }
         }
 
         return $currencyData;
@@ -132,10 +140,12 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
     public function getAttributes()
     {
         $attributeSets = Mage::getModel('catalog/product_attribute_set_api')->items();
+        $attributesData = array();
         $attributesData['total_attribute_sets'] = count($attributeSets);
         $attributesData['attribute_set'] = array();
         foreach ($attributeSets as $attributeSet) {
             $items = Mage::getModel('catalog/product_attribute_api')->items($attributeSet['set_id']);
+            $attributeData = array();
             $attributeData['total_attributes'] = count($items);
             $attributeData['attribute_set_id'] = $attributeSet['set_id'];
             $attributeData['name'] = $attributeSet['name'];
@@ -292,7 +302,9 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
         $ccModel = Mage::getSingleton('convertcart_sync/cc');
         $ccModel->setParams($params);
         $wishlistModel = Mage::getModel("wishlist/wishlist");
-        if (!is_object($wishlistModel)) return array();
+        if (!is_object($wishlistModel)) {
+            return array();
+        }
         $wishlistCollection = $wishlistModel->getCollection()
                             ->addFieldToFilter('updated_at', array('gteq' =>$ccModel->updatedAt))
                             ->setOrder('updated_at', $ccModel->order);
@@ -300,18 +312,22 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
                             ->setPageSize($ccModel->limit)
                             ->setCurPage($ccModel->page);
         $wishlistData = array();
-        $w=0;
+        $w = 0;
         foreach ($wishlistCollection as $wishlist) {
+            if (!isset($wishlistData[$w])) {
+                $wishlistData[$w] = array();
+            }
             $wishlistData[$w]['wishlist_id'] = $wishlist->getWishlistId();
             $wishlistData[$w]['customer_id'] = $wishlist->getCustomerId();
             $wishlistData[$w]['updated_at'] = $wishlist->getUpdatedAt();
-            $wishListItemCollection =  Mage::getModel('wishlist/wishlist')
-                                       ->loadByCustomer($wishlist->getCustomerId(), true);
+            $wishListItemCollection = Mage::getModel('wishlist/wishlist')
+                                   ->loadByCustomer($wishlist->getCustomerId(), true);
             $itemcollection = array();
-            $i=0;
+            $i = 0;
             foreach ($wishListItemCollection->getItemCollection() as $item) {
                 $product = $item->getProduct();
-                $itemcollection[$i++] = $product->getData();
+                $itemcollection[$i] = $product->getData();
+                $i++;
             }
 
             $wishlistData[$w]['items'] = $itemcollection;
@@ -338,7 +354,9 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
                     ->setPageSize($ccModel->limit)
                     ->setCurPage($ccModel->page);
         $newsletterSubscribers = array();
+        $newsletterSubscribers = array();
         foreach ($collection as $subscriber) {
+            $newsletterSubscriber = array();
             $newsletterSubscriber['subscriber_id'] = $subscriber['subscriber_id'];
             $newsletterSubscriber['store_id'] = $subscriber['store_id'];
             $newsletterSubscriber['customer_id'] = $subscriber['customer_id'];
@@ -394,7 +412,9 @@ class Convertcart_Model_Sync extends Mage_Core_Model_Session_Abstract
         $ccModel = Mage::getSingleton('convertcart_sync/cc');
         $ccModel->setParams($params);
         $amModel = Mage::getModel('amlist/list');
-        if(!is_object($amModel)) return $favorites;
+        if (!is_object($amModel)) {
+            return $favorites;
+        }
         $lists = $amModel->getCollection()
                          ->setPageSize($ccModel->limit)
                          ->setCurPage($ccModel->page);

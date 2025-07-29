@@ -4,6 +4,18 @@
             <version>1.5.0</version>
         </Convertcart>
     </modules>
+    
+    <global>
+        <helpers>
+            <cc_analytics>
+                <class>Convertcart_Helper_Analytics</class>
+            </cc_analytics>
+            <!-- Legacy alias for backward compatibility -->
+            <convertcart_analytics>
+                <class>Convertcart_Helper_Analytics</class>
+            </convertcart_analytics>
+        </helpers>
+    </global>
     <frontend>
         <events>
             <!-- Analytics Observers -->
@@ -21,6 +33,15 @@
                     </convertcart_analytics_cc_init>
                 </observers>
             </controller_action_layout_render_before>
+            <checkout_cart_product_add_after>
+                <observers>
+                    <convertcart_analytics_cc_add_to_cart>
+                        <type>singleton</type>
+                        <class>Convertcart_Model_Analytics_Observer</class>
+                        <method>addToCart</method>
+                    </convertcart_analytics_cc_add_to_cart>
+                </observers>
+            </checkout_cart_product_add_after>
             <controller_action_layout_generate_blocks_after>
                 <observers>
                     <convertcart_analytics_cc_homepage_view>

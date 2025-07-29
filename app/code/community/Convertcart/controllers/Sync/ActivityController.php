@@ -1,5 +1,6 @@
 <?php
-class Convertcart_Model_Sync_ActivityController extends Mage_Core_Controller_Front_Action
+
+class Convertcart_ActivityController extends Mage_Core_Controller_Front_Action
 {
     public function preDispatch()
     {
@@ -43,7 +44,7 @@ class Convertcart_Model_Sync_ActivityController extends Mage_Core_Controller_Fro
             }
 
             Mage::helper('convertcart/sync_cc')->sendSuccessResponse();
-        } catch (Exception $e){
+        } catch (Exception $e) {
             if ($e->getCode() == 400) {
                 $response = array('error' => $e->getMessage());
                 Mage::app()->getResponse()

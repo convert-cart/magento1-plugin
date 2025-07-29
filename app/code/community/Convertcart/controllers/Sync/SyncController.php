@@ -121,7 +121,7 @@ class Convertcart_Model_Sync_SyncController extends Mage_Core_Controller_Front_A
             $params = Mage::getModel('convertcart/sync_cc')->getParams();
             $quoteData = Mage::getModel('convertcart/sync_cc')->getQuote($params);
             Mage::Helper('convertcart/sync_cc')->sendSuccessResponse($quoteData);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             Mage::Helper('convertcart/sync_cc')->sendErrorResponse($e->getMessage());
         }
     }

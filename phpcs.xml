@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<ruleset name="ConvertCart">
+    <description>PHP CodeSniffer configuration for ConvertCart Magento 1 Plugin (Magento 1 compatible)</description>
+    
+    <!-- Check all PHP files in the module -->
+    <file>app/code/community/Convertcart</file>
+    
+    <!-- Include PSR-2 standard as base, but exclude rules that conflict with Magento 1 conventions -->
+    <rule ref="PSR2">
+        <!-- Exclude namespace rules as Magento 1 doesn't use namespaces -->
+        <exclude name="PSR1.Classes.ClassDeclaration.MissingNamespace"/>
+        
+        <!-- Exclude class name rules as Magento 1 uses underscore notation -->
+        <exclude name="Squiz.Classes.ValidClassName.NotCamelCaps"/>
+        
+        <!-- Exclude method name rules as Magento 1 uses underscore prefixes -->
+        <exclude name="PSR2.Methods.MethodDeclaration.Underscore"/>
+        <exclude name="PSR1.Methods.CamelCapsMethodName.NotCamelCaps"/>
+        
+        <!-- Exclude constructor rules as Magento 1 uses _construct() -->
+        <exclude name="PSR1.Classes.ClassDeclaration.MultipleClasses"/>
+        
+        <!-- Exclude test files -->
+        <exclude-pattern>*/Test/*</exclude-pattern>
+    </rule>
+    
+    <!-- Custom rules -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="120"/>
+        </properties>
+    </rule>
+    
+    <!-- Exclude vendor and test directories -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/Test/*</exclude-pattern>
+    <exclude-pattern>*/sql/*</exclude-pattern>
+    
+    <!-- Show progress -->
+    <arg value="p"/>
+    
+    <!-- Show colors in output -->
+    <arg name="colors"/>
+    
+    <!-- Show sniff codes in all reports -->
+    <arg value="s"/>
+</ruleset>

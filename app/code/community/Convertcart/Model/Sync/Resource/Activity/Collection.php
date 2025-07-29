@@ -1,5 +1,5 @@
 <?php
-class Convertcart_Model_Sync_Resource_Activity_Collection extends Mage_Core_Model_Resource_Db_Collection_Abstract
+class Convertcart_Model_Activity_Collection extends Mage_Core_Model_Resource_Db_Collection_Abstract
 {
     public function _construct()
     {

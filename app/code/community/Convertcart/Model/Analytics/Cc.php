@@ -13,13 +13,15 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
 
     public function getInitScript()
     {
-        if (Mage::Helper('convertcart/analytics_cc')->isEnabled() == false) //dont proceed if not enabled
+        if (Mage::Helper('convertcart/analytics_cc')->isEnabled() == false) { //dont proceed if not enabled
             return;
+        }
 
         $scriptDomain = Mage::Helper('convertcart/analytics_cc')->getScriptDomain();
         $clientKey = Mage::Helper('convertcart/analytics_cc')->getClientKey();
-        if (!isset($clientKey))
+        if (!isset($clientKey)) {
             return ;
+        }
 
         $script = Mage::app()->getLayout()->createBlock('core/template')
                   ->setClientKey($clientKey)
@@ -30,22 +32,25 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
 
     public function getCcData()
     {
-        if (Mage::Helper('convertcart/analytics_cc')->isEnabled() == false) //dont proceed if not enabled
+        if (Mage::Helper('convertcart/analytics_cc')->isEnabled() == false) { //dont proceed if not enabled
             return;
+        }
 
         $session = $this->_getSession();
         $eventData = $session->getCc_Events();
 
-        if (empty($eventData))
+        if (empty($eventData)) {
             return;
+        }
 
         return $eventData;
     }
 
     public function insertMeta($includeCustomerInfo = 0)
     {
-        if (Mage::Helper('convertcart/analytics_cc')->isEnabled() == false)
+        if (Mage::Helper('convertcart/analytics_cc')->isEnabled() == false) {
             return;
+        }
 
         $metaData = array();
         $metaData['date'] = Mage::getModel('core/date')->gmtDate('Y-m-d H:i:s');
@@ -53,8 +58,9 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
             if (Mage::getSingleton('customer/session')->isLoggedIn()) {
                 $metaData['customer_status'] = 'logged_in';
                 $customer = Mage::getSingleton('customer/session')->getCustomer();
-                if(!is_object($customer))
+                if (!is_object($customer)) {
                     return $metaData;
+                }
                 $metaData['customer_email'] = $customer->getEmail();
             } else {
                 $metaData['customer_status'] = 'guest';
@@ -62,24 +68,27 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
 
             $store = Mage::app()->getStore();
 
-            if (!is_object($store))
+            if (!is_object($store)) {
                 return $metaData;
+            }
 
             $metaData['current_currency'] = $store->getCurrentCurrencyCode();
             $metaData['base_currency'] = $store->getBaseCurrencyCode();
             $metaData['current_currency_rate'] = $store->getCurrentCurrencyRate();
 
             $locale = Mage::app()->getLocale();
-            if (!is_object($locale))
+            if (!is_object($locale)) {
                 $metaData['language'] = $locale->getLocaleCode();
+            }
 
             $metaData['store_code'] = $store->getCode();
             $metaData['store_id'] = $store->getId();
 
             $website = Mage::app()->getWebsite();
 
-            if (!is_object($website))
+            if (!is_object($website)) {
                 return $metaData;
+            }
 
             $metaData['website_id'] = $website->getId();
             $metaData['website_code'] = $website->getCode();
@@ -121,12 +130,13 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
             $resource = Mage::getSingleton('catalog/product')->getResource();
             if (is_object($resource)) {
                 $resource = Mage::getSingleton('catalog/product')->getResource();
-                if (is_object($store))
+                if (is_object($store)) {
                     $imagePath = $resource->getAttributeRawValue($item->getProductId(), "image", $store);
+                }
                     $imageUrl = $this->getImageUrl($imagePath);
-                    if ($imageUrl != null) {
-                        $cartItem['image'] = $imageUrl;
-                    }
+                if ($imageUrl != null) {
+                    $cartItem['image'] = $imageUrl;
+                }
             }
 
             $cart[] = $cartItem;
@@ -136,32 +146,91 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
     }
 
 
+    /**
+     * Get product options from cart item
+     *
+     * @param mixed $item
+     * @return array|null
+     */
     public function getCartItemOptions($item)
     {
-        if (!is_object($item))
+        if (!$this->isValidItem($item)) {
             return null;
+        }
 
         $product = $item->getProduct();
-        if (!is_object($product))
+        $productOptions = $this->getProductOrderOptions($product);
+        
+        if (empty($productOptions['options'])) {
             return null;
+        }
+
+        return $this->formatCustomOptions($productOptions['options']);
+    }
+
+    /**
+     * Check if item is valid
+     *
+     * @param mixed $item
+     * @return bool
+     */
+    protected function isValidItem($item)
+    {
+        if (!is_object($item)) {
+            return false;
+        }
+
+        $product = $item->getProduct();
+        if (!is_object($product)) {
+            return false;
+        }
 
         $productInstance = $product->getTypeInstance(true);
-        if (!is_object($productInstance))
-            return null;
+        return is_object($productInstance);
+    }
 
-        $productOptions = $productInstance->getOrderOptions($product);
-        $options = isset($productOptions['options']) ? $productOptions['options'] : null;
-        if (!isset($options) || empty($options))
-            return null;
+    /**
+     * Get order options from product
+     *
+     * @param mixed $product
+     * @return array
+     */
+    protected function getProductOrderOptions($product)
+    {
+        if (!is_object($product)) {
+            return array('options' => null);
+        }
 
+        $productInstance = $product->getTypeInstance(true);
+        if (!is_object($productInstance)) {
+            return array('options' => null);
+        }
+
+        $options = $productInstance->getOrderOptions($product);
+        return is_array($options) ? $options : array('options' => null);
+    }
+
+    /**
+     * Format custom options array
+     *
+     * @param array $options
+     * @return array
+     */
+    protected function formatCustomOptions(array $options)
+    {
         $customOptions = array();
+        
         foreach ($options as $option) {
-            $customOption = array();
-            $customOption['label'] = isset($option['label']) ? $option['label'] : null;
-            $customOption['value'] = isset($option['value']) ? $option['value'] : null;
-            $customOption['option_id'] = isset($option['option_id']) ? $option['option_id'] : null;
-            $customOption['option_type'] = isset($option['option_type']) ? $option['option_type'] : null;
-            $customOptions[] = $customOption;
+            if (!is_array($option)) {
+                continue;
+            }
+            
+            $customOptions[] = array(
+                'label' => isset($option['label']) ? $option['label'] : null,
+                'value' => isset($option['value']) ? $option['value'] : null,
+                'option_id' => isset($option['option_id']) ? $option['option_id'] : null,
+                'option_type' => isset($option['option_type']) ? $option['option_type'] : null
+            );
         }
 
         return $customOptions;
@@ -169,12 +238,14 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
 
     public function getOrderItemOptions($item)
     {
-        if (!is_object($item))
+        if (!is_object($item)) {
             return null;
+        }
 
         $options = $item->getProductOptions();
-        if (!isset($options['options']) || empty($options['options']))
+        if (!isset($options['options']) || empty($options['options'])) {
             return null;
+        }
 
         $options = $options['options'];
         $customOptions = array();
@@ -197,12 +268,17 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
         $store = Mage::app()->getStore();
         $wishlistItems = Mage::helper('wishlist')->getItemCollection();
         foreach ($wishlistItems as $wishlistItem) {
+            $wlist = array();
             $wlist['sku'] = str_replace("'", "", $wishlistItem->getSku());
             $resource = Mage::getSingleton('catalog/product');
             if (is_object($resource)) {
                 $resource = $resource->getResource();
                 if (is_object($store) and is_object($resource)) {
-                    $wlist['url_key'] = $resource->getAttributeRawValue($wishlistItem->getProductId(), "url_key", $store);
+                    $wlist['url_key'] = $resource->getAttributeRawValue(
+                        $wishlistItem->getProductId(),
+                        "url_key",
+                        $store
+                    );
                     $imagePath = $resource->getAttributeRawValue($wishlistItem->getProductId(), "image", $store);
                     $imageUrl = $this->getImageUrl($imagePath);
                     if ($imageUrl != null) {
@@ -232,6 +308,7 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
             $store = Mage::app()->getStore();
             $wishlistItems = Mage::helper('wishlist')->getWishlistItemCollection();
             foreach ($wishlistItems as $wishlistItem) {
+                $wlist = array();
                 $product = $wishlistItem->getProduct();
                 $wlist['name'] = str_replace("'", "", $product->getName());
                 $wlist['id'] = $product->getId();
@@ -263,12 +340,17 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
         $ccHelper = Mage::Helper('convertcart/analytics_cc');
         $id = $ccHelper->sanitizeParam(Mage::app()->getRequest()->getParam('id'));
         $wishlist = array();
-        if(!isset($id)) return $wishlist;
+        if (!isset($id)) {
+            return $wishlist;
+        }
         $amModel = Mage::getModel('amlist/item');
-        if (!is_object($amModel)) return $wishlist;
+        if (!is_object($amModel)) {
+            return $wishlist;
+        }
         $list = $amModel->getCollection()->addFieldToFilter('list_id', $id)->setPageSize($wItemlimit);
         $store = Mage::app()->getStore();
         foreach ($list as $listItem) {
+            $wItem = array();
             $wItem['id'] = $ccHelper->getArrValue($listItem, 'item_id');
             $wItem['quantity'] = $ccHelper->getArrValue($listItem, 'qty');
             $productId = $listItem->getProductId();
@@ -291,7 +373,7 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
             }
         }
 
-       return $wishlist;
+        return $wishlist;
     }
 
     public function getAmastyFavorites()
@@ -300,13 +382,19 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
         $amFavourite = array();
         $amModel = Mage::getModel('amlist/list');
         $customerSessionModel = Mage::getSingleton('customer/session');
-        if (!is_object($amModel)) return $amFavourite;
-        if (!$customerSessionModel->isLoggedIn()) return $amFavourite;
+        if (!is_object($amModel)) {
+            return $amFavourite;
+        }
+        if (!$customerSessionModel->isLoggedIn()) {
+            return $amFavourite;
+        }
         $customerID = $customerSessionModel->getId();
         $lists = $amModel->getCollection()->addFieldToFilter('customer_id', $customerID);
+        $amFavourite = array();
         $amFavourite['items'] = array();
 
         foreach ($lists as $list) {
+            $item = array();
             $customerId = $ccHelper->getArrValue($list, 'customer_id');
             $item['listId'] = $ccHelper->getArrValue($list, 'list_id');
             $item['title']  = $ccHelper->getArrValue($list, 'title');
@@ -324,19 +412,22 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
         $magentoVersion = Mage::getVersion();
         if ($magentoVersion) {
             $magentoVersion = explode(".", $magentoVersion);
-            if ($magentoVersion[1]>4)
+            if ($magentoVersion[1]>4) {
                 return;
+            }
         }
 
         //if customer logged in, then created successfully
-        if (!Mage::getSingleton('customer/session')->isLoggedIn())
+        if (!Mage::getSingleton('customer/session')->isLoggedIn()) {
             return;
+        }
 
         $customer = Mage::getSingleton('customer/session')->getCustomer();
 
+        $ccData = array();
         $ccData['event_type'] = Mage::Helper('convertcart_model_analytics/cc')->getEventType("customerRegister");
         $ccData['event_data'] = $this->getCustomerData($customer);
-        $ccData['meta_data'] =  Mage::getModel('convertcart_model_analytics/cc')->insertMeta();
+        $ccData['meta_data'] = Mage::getModel('convertcart_model_analytics/cc')->insertMeta();
 
         $cc = Mage::getModel('convertcart_model_analytics/cc');
         $cc->storeData($ccData);
@@ -359,8 +450,9 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
 
     public function storeData($eventData)
     {
-        if (Mage::Helper('convertcart/analytics_cc')->isEnabled() == false)
+        if (Mage::Helper('convertcart/analytics_cc')->isEnabled() == false) {
             return;
+        }
 
         $session = $this->_getSession();
         $ccData = $session->getCc_Events();
@@ -385,8 +477,9 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
 
     public function getPrice($price)
     {
-        if (!isset($price))
+        if (!isset($price)) {
             return 0;
+        }
 
         return Mage::helper('core')->currency($price, false, false);
     }
