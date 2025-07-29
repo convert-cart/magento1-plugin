@@ -84,6 +84,68 @@ class Convertcart_Model_Analytics_Observer
             Mage::log($e->getMessage(), null, $this->logFile);
         }
     }
+    
+    /**
+     * Fallback script injection for themes with custom layouts
+     * This ensures the script is injected even if the layout XML is not processed correctly
+     *
+     * @param Varien_Event_Observer $observer
+     * @return void
+     */
+    public function addFallbackScript($observer)
+    {
+        try {
+            // Only add if not already added and module is enabled
+            if (Mage::registry('convertcart_script_added') || !Mage::helper('convertcart/analytics_cc')->isEnabled()) {
+                return;
+            }
+            
+            $layout = $observer->getEvent()->getLayout();
+            if (!is_object($layout)) {
+                return;
+            }
+            
+            $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+            
+            // 1. Try to add init script to head
+            $head = $layout->getBlock('head');
+            if ($head && !$head->getChild('convertcart.init')) {
+                $initScript = $layout->createBlock('core/template', 'convertcart.fallback.init')
+                    ->setTemplate('convertcart/init.phtml');
+                $head->append($initScript);
+            }
+            
+            // 2. Try to add event container before body end
+            $beforeBodyEnd = $layout->getBlock('before_body_end');
+            if ($beforeBodyEnd && !$beforeBodyEnd->getChild('convertcart.events')) {
+                $eventContainer = $layout->createBlock('core/text_list', 'convertcart.fallback.events');
+                $beforeBodyEnd->append($eventContainer);
+            }
+            
+            // 3. If we couldn't add to head, try to add directly to content
+            if ((!$head || !$beforeBodyEnd) && !$layout->getBlock('convertcart.fallback.inline')) {
+                $inlineScript = $layout->createBlock('core/template', 'convertcart.fallback.inline')
+                    ->setTemplate('convertcart/inline.phtml');
+                
+                if ($beforeBodyEnd) {
+                    $beforeBodyEnd->append($inlineScript);
+                } elseif ($head) {
+                    $head->append($inlineScript);
+                } else {
+                    // Last resort - prepend to content
+                    $content = $layout->getBlock('content');
+                    if ($content) {
+                        $content->prepend($inlineScript);
+                    }
+                }
+            }
+            
+            // Mark as added to prevent duplicates
+            Mage::register('convertcart_script_added', true);
+        } catch (Exception $e) {
+            Mage::log('Error in Convertcart fallback script injection: ' . $e->getMessage(), null, $this->logFile);
+        }
+    }
 
     /**
      * Handle homepage view event

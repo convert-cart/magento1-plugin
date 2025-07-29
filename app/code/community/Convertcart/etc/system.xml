@@ -1,74 +1,46 @@
 <config>
     <tabs>
-        <convertcart translate="label" module="convertcart">
-            <label>Convert Cart</label>
-            <sort_order>99999</sort_order>
-        </convertcart>
+        <convertcart_config translate="label" module="convertcart">
+            <label>ConvertCart</label>
+            <sort_order>500</sort_order>
+        </convertcart_config>
     </tabs>
     <sections>
         <convertcart translate="label" module="convertcart">
-            <label>Convert Cart Keys</label>
-            <tab>convertcart</tab>
-            <frontend_type>text</frontend_type>
-            <sort_order>1000</sort_order>
-            <show_in_default>1</show_in_default>
-            <show_in_website>1</show_in_website>
-            <show_in_store>1</show_in_store>
+            <class>separator-top</class>
+            <label>ConvertCart Configuration</label>
+            <tab>convertcart_config</tab>
+            <resource>convertcart/config</resource>
             <groups>
-                <analytics_config translate="label">
-                    <label>Analytics Keys</label>
-                    <frontend_type>text</frontend_type>
-                    <sort_order>1</sort_order>
+                <configuration translate="label">
+                    <label>ConvertCart Configuration</label>
+                    <sort_order>10</sort_order>
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
                     <fields>
-                        <client_key>
-                            <label>Enter Your Client Id / Domain Id</label>
-                            <comment>Contact ConvertCart to get this key</comment>
+                        <domainid>
+                            <label>Domain ID</label>
+                            <comment><![CDATA[Your ConvertCart Domain ID. <a href="https://app.convertcart.com/settings/domains" target="_blank">Find your Domain ID</a>]]></comment>
                             <frontend_type>text</frontend_type>
-                            <sort_order>1</sort_order>
+                            <sort_order>10</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
-                        </client_key>
-                        <script_domain>
-                            <label>Enter Script Domain</label>
-                            <comment>Default is cdn.convertcart/analytics_cc</comment>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>2</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </script_domain>
-                    </fields>
-                </analytics_config>
-                <sync_config translate="label">
-                    <label>Sync Keys</label>
-                    <frontend_type>text</frontend_type>
-                    <sort_order>2</sort_order>
-                    <show_in_default>1</show_in_default>
-                    <show_in_website>1</show_in_website>
-                    <show_in_store>1</show_in_store>
-                    <fields>
-                        <api_key translate="label">
+                            <validate>required-entry</validate>
+                        </domainid>
+                        <api_key>
                             <label>API Key</label>
-                            <comment>Please Send this key to ConvertCart</comment>
+                            <comment><![CDATA[Your ConvertCart API key for data synchronization. <a href="https://app.convertcart.com/settings/developers" target="_blank">Generate API Key</a>]]></comment>
                             <frontend_type>text</frontend_type>
-                            <frontend_model>Convertcart_Model_Sync_Block_Field_Name_Renderer</frontend_model>
-                            <sort_order>6</sort_order>
+                            <frontend_model>convertcart/field_name_renderer</frontend_model>
+                            <sort_order>20</sort_order>
                             <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
                         </api_key>
-                        <reset_api_key translate="label">
-                            <label>Reset API Key</label>
-                            <comment>To Reset key, Select 'Yes'->Save Config</comment>
-                            <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <sort_order>28</sort_order>
-                            <show_in_default>1</show_in_default>
-                        </reset_api_key>
                     </fields>
-                </sync_config>
+                </configuration>
             </groups>
         </convertcart>
     </sections>

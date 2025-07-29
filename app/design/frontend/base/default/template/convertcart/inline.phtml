@@ -1,15 +1,14 @@
-<!-- ConvertCart -->
-<script data-cfasync="false">
-// Initialize the queue before the script loads
-window.ccLayer = window.ccLayer || [];
-window.ccart = window.ccart || function() {
-    (window.ccart.q = window.ccart.q || []).push(arguments);
-};
-
-// Only load the script if it's not already loaded or loading
-if (!window._ccScriptLoading && !window.ccart.loaded) {
+<!-- ConvertCart Inline Script -->
+<script type="text/javascript" data-cfasync="false">
+//<![CDATA[
+if (typeof window.ccart === 'undefined' && !window._ccScriptLoading) {
     window._ccScriptLoading = true;
+    window.ccLayer = window.ccLayer || [];
+    window.ccart = window.ccart || function() {
+        (window.ccart.q = window.ccart.q || []).push(arguments);
+    };
     
+    // Load the script
     var script = document.createElement('script');
     script.type = 'text/javascript';
     script.async = true;
@@ -47,5 +46,6 @@ if (!window._ccScriptLoading && !window.ccart.loaded) {
     var head = document.getElementsByTagName('head')[0] || document.documentElement;
     head.insertBefore(script, head.firstChild);
 }
+//]]>
 </script>
-<!-- ConvertCart -->
+<!-- End ConvertCart Inline Script -->

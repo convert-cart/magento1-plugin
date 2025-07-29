@@ -1,5 +1,5 @@
 # Composer dependencies
-/vendor/
+vendor/
 
 # PHP-CS-Fixer cache
 .php-cs-fixer.cache

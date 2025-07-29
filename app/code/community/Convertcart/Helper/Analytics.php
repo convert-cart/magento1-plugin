@@ -1,35 +1,71 @@
 <?php
 class Convertcart_Helper_Analytics extends Mage_Core_Helper_Abstract
 {
+    /**
+     * Get event type mapping between Magento 1 and ConvertCart
+     *
+     * @param string $event
+     * @return string
+     */
     public function getEventType($event)
     {
-        $eventMap = array(  'homepageView'      =>  'homepageViewed',
-                            'cmsView'           =>  'contentPageViewed',
-                            'categoryView'      =>  'categoryViewed',
-                            'productView'       =>  'productViewed',
-                            'searchView'        =>  'productsSearched',
-                            'customerRegister'  =>  'registered',
-                            'loggedIn'          =>  'loggedIn',
-                            'loggedOut'         =>  'loggedOut',
-                            'cartView'          =>  'cartViewed',
-                            'checkoutView'      =>  'checkoutViewed',
-                            'updateCart'        =>  'cartUpdated',
-                            'addToCart'         =>  'productAdded',
-                            'removeFromCart'    =>  'productRemoved',
-                            'ordered'           =>  'orderCompleted',
-                            'addToWishlist'     =>  'productAddedToWishlist',
-                            'removeFromWishlist'=>  'productRemovedFromWishlist',
-                            'wishlistUpdated'   =>  'wishlistUpdated',
-                            'wishlistView'      =>  'wishlistViewed',
-                            'addToCompare'      =>  'productAddedToCompare',
-                            'removeFromCompare' =>  'productRemovedFromCompare',
-                            'compareView'       =>  'compareViewed',
-                            'couponApplied'     =>  'couponApplied',
-                            'couponDenied'      =>  'couponDenied',
-                            'couponRemoved'     =>  'couponRemoved',
-                            'reviewSave'        =>  'productReviewed',
-                            'amastyFavoritesViewed' =>  'amastyFavoritesViewed'
-                        );
+        $eventMap = array(
+            // Page View Events
+            'homepageView'      => 'homepageViewed',
+            'cmsView'           => 'contentPageViewed',
+            'categoryView'      => 'categoryViewed',
+            'productView'       => 'productViewed',
+            'searchView'        => 'productsSearched',
+            'cartView'          => 'cartViewed',
+            'checkoutView'      => 'checkoutViewed',
+            'wishlistView'      => 'wishlistViewed',
+            'compareView'       => 'compareViewed',
+            'checkoutSuccess'   => 'orderCompleted',
+            
+            // User Account Events
+            'customerRegister'  => 'signedUp',
+            'customerLogin'     => 'signedIn',
+            'customerLogout'    => 'signedOut',
+            'newsletterSubscribe' => 'subscribedToNewsletter',
+            'newsletterUnsubscribe' => 'unsubscribedFromNewsletter',
+            
+            // Cart & Checkout Events
+            'addToCart'         => 'productAdded',
+            'removeFromCart'    => 'productRemoved',
+            'updateCart'        => 'cartUpdated',
+            'couponApplied'     => 'couponApplied',
+            'couponDenied'      => 'couponDenied',
+            'couponRemoved'     => 'couponRemoved',
+            'initiateCheckout'  => 'checkoutStarted',
+            'addShippingInfo'   => 'shippingInfoAdded',
+            'addPaymentInfo'    => 'paymentInfoAdded',
+            'purchase'          => 'orderCompleted',
+            'orderRefund'       => 'orderRefunded',
+            
+            // Wishlist & Compare
+            'addToWishlist'     => 'productAddedToWishlist',
+            'removeFromWishlist'=> 'productRemovedFromWishlist',
+            'wishlistUpdated'   => 'wishlistUpdated',
+            'addToCompare'      => 'productAddedToCompare',
+            'removeFromCompare' => 'productRemovedFromCompare',
+            
+            // Product Interaction
+            'productClick'      => 'productClicked',
+            'productImpression' => 'productImpression',
+            'productDetailView' => 'productViewed',
+            'addToCartFromList' => 'productAddedFromList',
+            'addToCartFromDetail' => 'productAddedFromDetail',
+            'removeFromCartFromList' => 'productRemovedFromList',
+            'removeFromCartFromDetail' => 'productRemovedFromDetail',
+            
+            // Review & Rating
+            'reviewSave'        => 'productReviewed',
+            'ratingSave'        => 'productRated',
+            
+            // Custom Events
+            'amastyFavoritesViewed' => 'amastyFavoritesViewed',
+            'customEvent'       => 'customEvent'
+        );
         if (isset($eventMap[$event])) {
             return $eventMap[$event];
         } else {
@@ -37,13 +73,14 @@ class Convertcart_Helper_Analytics extends Mage_Core_Helper_Abstract
         }
     }
 
+    /**
+     * Check if tracking is enabled
+     *
+     * @return bool
+     */
     public function isEnabled()
     {
-        if ($this->getClientKey()) {
-            return 1;
-        } else {
-            return false;
-        }
+        return (bool)$this->getClientKey();
     }
 
     public function getClientKey()
@@ -53,16 +90,6 @@ class Convertcart_Helper_Analytics extends Mage_Core_Helper_Abstract
             return false;
         } else {
             return $clientKey;
-        }
-    }
-
-    public function getScriptDomain()
-    {
-        $scriptDomain = Mage::getStoreConfig('convertcart/config/script_domain');
-        if (!isset($scriptDomain) or $scriptDomain == '') {
-            return 'cdn.convertcart.com';
-        } else {
-            return $scriptDomain;
         }
     }
 

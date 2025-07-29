@@ -1,9 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <config>
     <modules>
         <Convertcart>
             <version>1.5.0</version>
+            <depends>
+                <Mage_Core />
+            </depends>
         </Convertcart>
     </modules>
+    
+    <!-- Global Configuration -->
+    <default>
+        <convertcart>
+            <configuration>
+                <enabled>1</enabled>
+                <debug>0</debug>
+                <enable_logging>0</enable_logging>
+            </configuration>
+        </convertcart>
+    </default>
     
     <global>
         <helpers>
@@ -33,6 +48,17 @@
                     </convertcart_analytics_cc_init>
                 </observers>
             </controller_action_layout_render_before>
+            
+            <!-- Fallback script injection for custom themes -->
+            <controller_action_layout_generate_xml_before>
+                <observers>
+                    <convertcart_analytics_fallback_script>
+                        <type>singleton</type>
+                        <class>Convertcart_Model_Analytics_Observer</class>
+                        <method>addFallbackScript</method>
+                    </convertcart_analytics_fallback_script>
+                </observers>
+            </controller_action_layout_generate_xml_before>
             <checkout_cart_product_add_after>
                 <observers>
                     <convertcart_analytics_cc_add_to_cart>
@@ -109,6 +135,32 @@
         </events>
     </frontend>
     <global>
+        <helpers>
+            <convertcart>
+                <class>Convertcart_Helper</class>
+            </convertcart>
+        </helpers>
+        <resources>
+            <convertcart_setup>
+                <setup>
+                    <module>Convertcart</module>
+                    <class>Mage_Core_Model_Resource_Setup</class>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </convertcart_setup>
+            <convertcart_write>
+                <connection>
+                    <use>core_write</use>
+                </connection>
+            </convertcart_write>
+            <convertcart_read>
+                <connection>
+                    <use>core_read</use>
+                </connection>
+            </convertcart_read>
+        </resources>
         <models>
             <convertcart_analytics_cc>
                 <class>Convertcart_Model_Analytics</class>
@@ -144,25 +196,57 @@
     </global>
     <default>
         <convertcart>
-            <config>
+            <configuration>
+                <enabled>1</enabled>
+                <debug>0</debug>
+                <enable_logging>0</enable_logging>
+                <domainid></domainid>
+                <api_key></api_key>
+            </configuration>
+            <sync>
+                <enabled>1</enabled>
                 <catalog>1</catalog>
                 <order>1</order>
                 <customer>1</customer>
-                <reset_api_key>0</reset_api_key>
-            </config>
+                <category>1</category>
+            </sync>
         </convertcart>
     </default>
+    
     <adminhtml>
+        <menu>
+            <convertcart module="convertcart">
+                <title>ConvertCart</title>
+                <sort_order>100</sort_order>
+                <children>
+                    <config translate="title" module="convertcart">
+                        <title>Configuration</title>
+                        <sort_order>10</sort_order>
+                        <action>adminhtml/system_config/edit/section/convertcart</action>
+                    </config>
+                </children>
+            </convertcart>
+        </menu>
+        
         <events>
-            <controller_action_predispatch>
+            <controller_action_predispatch_adminhtml_system_config_edit>
                 <observers>
-                    <convertcart_sync_cc_enabled>
-                        <type>singleton</type>
-                        <class>Convertcart_Model_Sync_Observer</class>
-                        <method>generateKey</method>
-                    </convertcart_sync_cc_enabled>
+                    <convertcart_setup>
+                        <class>convertcart/observer</class>
+                        <method>checkSetup</method>
+                    </convertcart_setup>
                 </observers>
-            </controller_action_predispatch>
+            </controller_action_predispatch_adminhtml_system_config_edit>
+            
+            <adminhtml_block_html_before>
+                <observers>
+                    <convertcart_add_massaction>
+                        <class>convertcart/observer</class>
+                        <method>addMassaction</method>
+                    </convertcart_add_massaction>
+                </observers>
+            </adminhtml_block_html_before>
+            
             <catalog_product_delete_before>
                 <observers>
                     <convertcart_sync_cc_product_delete>
@@ -182,6 +266,7 @@
                 </observers>
             </catalog_category_delete_before>
         </events>
+        
         <acl>
             <resources>
                 <admin>
@@ -191,7 +276,8 @@
                                 <config>
                                     <children>
                                         <convertcart>
-                                            <title>Convert Cart</title>
+                                            <title>ConvertCart Configuration</title>
+                                            <sort_order>100</sort_order>
                                         </convertcart>
                                     </children>
                                 </config>
@@ -202,4 +288,11 @@
             </resources>
         </acl>
     </adminhtml>
+    
+    <!-- Cron Configuration -->
+    <crontab>
+        <jobs>
+    
+        </jobs>
+    </crontab>
 </config>
