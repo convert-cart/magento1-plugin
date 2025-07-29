@@ -38,15 +38,85 @@ This document provides instructions for setting up the development environment a
   composer run cs-fix
   ```
 
-- **Run PHP Mess Detector**:
+- **Run PHP Mess Detector** (minimal ruleset):
   ```bash
   composer run phpmd
+  ```
+
+- **Run PHP Mess Detector** (full ruleset - may show warnings):
+  ```bash
+  composer run phpmd-full
   ```
 
 - **Run all checks**:
   ```bash
   composer run check
   ```
+
+## Code Quality Standards
+
+### PHP_CodeSniffer (PHPCS)
+
+The project uses PSR-2 coding standards with some exceptions for Magento 1 compatibility. The configuration is in `phpcs.xml`.
+
+Key exceptions for Magento 1:
+- Class names follow Magento 1 naming conventions (not PSR-2)
+- Method names follow Magento 1 naming conventions (camelCase)
+
+### PHP Mess Detector (PHPMD)
+
+Two configurations are provided:
+
+1. **Minimal** (`phpmd-minimal.xml`): Used by default, focuses on critical issues only
+   - Excludes MissingImport warnings (not applicable for Magento 1's non-namespaced code)
+   - Excludes ElseExpression warnings (common in Magento 1 code)
+   - Excludes StaticAccess warnings (necessary for Magento 1)
+   - Excludes unused code warnings that are common in Magento 1
+
+2. **Full** (`phpmd.xml`): More comprehensive but may show warnings for Magento 1 patterns
+
+### Code Organization
+
+The codebase follows these organizational principles:
+
+1. **Helper Classes**: Specialized helper classes are used to group related functionality:
+   - `Convertcart_Helper_Analytics_ViewTracking`: Page view tracking
+   - `Convertcart_Helper_Analytics_WishlistTracking`: Wishlist operations
+   - `Convertcart_Helper_Analytics_CompareTracking`: Compare operations
+   - `Convertcart_Helper_Analytics_CartTracking`: Cart operations
+   - `Convertcart_Helper_Analytics_CheckoutTracking`: Checkout operations
+   - `Convertcart_Helper_Analytics_ReviewTracking`: Review operations
+   - `Convertcart_Helper_Analytics_CustomerTracking`: Customer operations
+   - `Convertcart_Helper_Analytics_NewsletterTracking`: Newsletter operations
+   - `Convertcart_Helper_Analytics_ProductTracking`: Product operations
+   - `Convertcart_Helper_Analytics_Initialization`: Initialization operations
+
+2. **Observer Pattern**: The main `Analytics/Observer.php` class delegates to specialized helpers
+
+## Common Issues and Solutions
+
+### PHP Warnings about Use Statements
+
+Magento 1 doesn't use PHP namespaces, so `use` statements will cause warnings. Instead of using `use` statements, use fully qualified class names.
+
+### PHPMD MissingImport Warnings
+
+PHPMD may warn about missing imports for classes like `Exception`, `Zend_Controller_Request_Http`, etc. These warnings are excluded in the minimal configuration since they don't apply to Magento 1's non-namespaced code.
+
+### Long Class Names
+
+Magento 1 often has long class names due to its naming conventions. Use aliases in `config.xml` when possible:
+
+```xml
+<helpers>
+    <convertcart>
+        <class>Convertcart_Helper</class>
+        <cc_analytics>Convertcart_Helper_Analytics</cc_analytics>
+    </convertcart>
+</helpers>
+```
+
+Then reference as `Mage::helper('cc_analytics/viewTracking')` instead of `Mage::helper('convertcart/analytics_viewTracking')`.
 
 ### IDE Integration
 
