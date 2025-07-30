@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <default>
+        <!-- Add init script to head -->
+        <reference name="head">
+            <block type="core/template" name="convertcart.init" as="convertcart_init" template="convertcart/init.phtml" />
+        </reference>
+        
+        <!-- Add event container before body end -->
+        <reference name="before_body_end">
+            <block type="core/text_list" name="convertcart.events" as="convertcart_events" />
+        </reference>
+    </default>
+</layout>

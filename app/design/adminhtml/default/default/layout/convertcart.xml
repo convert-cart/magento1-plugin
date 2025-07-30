@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <!-- ConvertCart Admin Layout -->
+    <adminhtml_system_config_edit>
+        <reference name="content">
+            <block type="adminhtml/template" name="convertcart.config.notice" template="convertcart/config/notice.phtml" before="-" />
+        </reference>
+    </adminhtml_system_config_edit>
+    
+    <!-- Add mass actions to product grid -->
+    <adminhtml_catalog_product_index>
+        <reference name="product.grid">
+            <block type="convertcart/adminhtml_widget_grid_massaction" name="convertcart.product.grid.massaction">
+                <action method="addItem">
+                    <type>sync_products</type>
+                    <label>Sync with ConvertCart</label>
+                    <url>*/sync/massSyncProducts</url>
+                </action>
+            </block>
+        </reference>
+    </adminhtml_catalog_product_index>
+    
+    <!-- Add mass actions to category grid -->
+    <adminhtml_catalog_category_index>
+        <reference name="category.grid">
+            <block type="convertcart/adminhtml_widget_grid_massaction" name="convertcart.category.grid.massaction">
+                <action method="addItem">
+                    <type>sync_categories</type>
+                    <label>Sync with ConvertCart</label>
+                    <url>*/sync/massSyncCategories</url>
+                </action>
+            </block>
+        </reference>
+    </adminhtml_catalog_category_index>
+</layout>

@@ -1,5 +1,86 @@
-<!-- ConvertCart Event-->
+<!-- ConvertCart Event Handler -->
 <script type='text/javascript' data-cfasync="false">
-ccart('send', 'evv1',<?php echo $this->getEventData(); ?>)
+//<![CDATA[
+(function() {
+    try {
+        // Initialize ccLayer if it doesn't exist
+        window.ccLayer = window.ccLayer || [];
+        
+        // Process any queued events from PHP
+        <?php
+        $ccModel = Mage::getSingleton('convertcart_analytics/cc');
+        $queuedEvents = $ccModel->fetchCcEvents();
+        if (!empty($queuedEvents)): 
+            foreach ($queuedEvents as $event): 
+                if (isset($event['ccEvent'])): ?>
+                    window.ccLayer.push({
+                        'event': '<?php echo $this->jsQuoteEscape($event['ccEvent']); ?>',
+                        'eventData': <?php echo $this->jsonEncode($event); ?>
+                    });
+                <?php endif; 
+            endforeach; 
+        endif; 
+        ?>
+        
+        // Process any direct event data
+        <?php if ($eventData = $this->getEventData()): ?>
+            var eventData = <?php echo $eventData; ?>;
+            if (eventData && eventData.event_type && eventData.event_data) {
+                window.ccLayer.push({
+                    'event': eventData.event_type,
+                    'eventData': eventData.event_data
+                });
+            }
+        <?php endif; ?>
+        
+        // Ensure the script is loaded if we have events to track
+        if ((window.ccLayer && window.ccLayer.length > 0) && !window._ccScriptLoading) {
+            var initScript = document.querySelector('script[src*="cdn.convertcart.com"]');
+            if (!initScript) {
+                // If script isn't in the DOM, inject it
+                var newScript = document.createElement('script');
+                newScript.type = 'text/javascript';
+                newScript.async = true;
+                newScript.src = '//cdn.convertcart.com/<?php echo $this->jsQuoteEscape($this->getClientKey()); ?>.js';
+                
+                // Add error handling for script loading
+                newScript.onerror = function() {
+                    console.error('Failed to load ConvertCart script');
+                    window._ccScriptLoading = false;
+                };
+                
+                // Try to inject into head, fall back to document.body
+                var head = document.getElementsByTagName('head')[0] || document.documentElement;
+                head.insertBefore(newScript, head.firstChild);
+                window._ccScriptLoading = true;
+                
+                // Add retry logic for ccLayer processing
+                var maxRetries = 5;
+                var retryCount = 0;
+                var checkCCart = setInterval(function() {
+                    if (window.ccart && window.ccart.loaded) {
+                        clearInterval(checkCCart);
+                        // Process any events that might have come in while loading
+                        if (window.ccLayer && window.ccLayer.length > 0) {
+                            window.ccLayer.forEach(function(event) {
+                                if (window.ccart && typeof window.ccart === 'function') {
+                                    window.ccart('track', event.event, event.eventData);
+                                }
+                            });
+                            window.ccLayer = [];
+                        }
+                    } else if (retryCount >= maxRetries) {
+                        clearInterval(checkCCart);
+                        console.error('ConvertCart script failed to load after ' + maxRetries + ' attempts');
+                    }
+                    retryCount++;
+                }, 500);
+            }
+        }
+    } catch (e) {
+        console.error('Error in ConvertCart event tracking:', e);
+    }
+})();
+//]]>
 </script>
-<!-- ConvertCart Event--> 
+<!-- End ConvertCart Event Handler -->

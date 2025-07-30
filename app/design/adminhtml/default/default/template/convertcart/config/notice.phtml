@@ -1,0 +1,13 @@
+<?php if ($this->isSectionEnabled()): ?>
+<div class="notification-global">
+    <strong><?php echo $this->__('ConvertCart is enabled.') ?></strong>
+    <?php echo $this->__('Your store is connected to ConvertCart.') ?>
+    <a href="https://app.convertcart.com/dashboard" target="_blank"><?php echo $this->__('Go to ConvertCart Dashboard') ?></a>
+</div>
+<?php else: ?>
+<div class="notification-global notification-global-notice">
+    <strong><?php echo $this->__('ConvertCart is not configured.') ?></strong>
+    <?php echo $this->__('Please enter your Domain ID and API Key to enable ConvertCart integration.') ?>
+    <a href="https://app.convertcart.com/settings/domains" target="_blank"><?php echo $this->__('Find your Domain ID') ?></a>
+</div>
+<?php endif; ?>

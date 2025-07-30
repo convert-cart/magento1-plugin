@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Convertcart>
+            <active>true</active>
+            <codePool>community</codePool>
+        </Convertcart>
+    </modules>
+</config>
