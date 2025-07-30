@@ -1,7 +1,7 @@
 <?php
 /**
  * ConvertCart Setup Helper
- * 
+ *
  * @category   Convertcart
  * @package    Convertcart_Analytics
  * @author     Convertcart

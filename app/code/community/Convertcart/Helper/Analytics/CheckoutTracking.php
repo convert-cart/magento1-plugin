@@ -139,7 +139,6 @@ class Convertcart_Helper_Analytics_CheckoutTracking extends Mage_Core_Helper_Abs
             $recentOrders = $session->getConvertcartRecentOrders() ?: [];
             $recentOrders[] = $order->getIncrementId();
             $session->setConvertcartRecentOrders(array_slice(array_unique($recentOrders), -10)); // Keep last 10 orders
-            
         } catch (Exception $e) {
             Mage::logException($e);
             Mage::log('Error in trackCheckoutSuccess: ' . $e->getMessage(), null, $this->logFile);

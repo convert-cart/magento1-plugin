@@ -13,7 +13,7 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
 
     /**
      * Get initialization script for ConvertCart
-     * 
+     *
      * @return string|bool Returns script block or false if client key is not set
      */
     public function getInitScript()
@@ -34,7 +34,7 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
 
     /**
      * Get stored ConvertCart events from session
-     * 
+     *
      * @return array|bool Returns array of events or false if none found
      */
     public function getCcData()
@@ -47,7 +47,7 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
 
     /**
      * Store Convertcart events in session with enhanced queuing
-     * 
+     *
      * This method stores events in the session with additional validation,
      * deduplication, and rate limiting.
      *
@@ -120,8 +120,8 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
             
             // Remove expired events
             $now = time();
-            $ccEvents = array_filter($ccEvents, function($event) use ($now) {
-                return !isset($event['_options']['stored_at']) || 
+            $ccEvents = array_filter($ccEvents, function ($event) use ($now) {
+                return !isset($event['_options']['stored_at']) ||
                        !isset($event['_options']['ttl']) ||
                        ($now - $event['_options']['stored_at']) < $event['_options']['ttl'];
             });
@@ -133,7 +133,6 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
             $session->setCcEvents($ccEvents);
             
             return true;
-            
         } catch (Exception $e) {
             Mage::logException($e);
             return false;
@@ -174,8 +173,8 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
             
             // Filter out expired events
             $now = time();
-            $validEvents = array_filter($events, function($event) use ($now) {
-                return !isset($event['_options']['stored_at']) || 
+            $validEvents = array_filter($events, function ($event) use ($now) {
+                return !isset($event['_options']['stored_at']) ||
                        !isset($event['_options']['ttl']) ||
                        ($now - $event['_options']['stored_at']) < $event['_options']['ttl'];
             });
@@ -183,14 +182,14 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
             // Filter by priority if specified
             if ($options['priority']) {
                 $priority = strtolower($options['priority']);
-                $validEvents = array_filter($validEvents, function($event) use ($priority) {
-                    return isset($event['_options']['priority']) && 
+                $validEvents = array_filter($validEvents, function ($event) use ($priority) {
+                    return isset($event['_options']['priority']) &&
                            strtolower($event['_options']['priority']) === $priority;
                 });
             }
             
             // Sort events by priority (high to low) and then by timestamp (oldest first)
-            usort($validEvents, function($a, $b) {
+            usort($validEvents, function ($a, $b) {
                 $priorityOrder = array('high' => 3, 'normal' => 2, 'low' => 1);
                 $aPriority = isset($a['_options']['priority']) ? strtolower($a['_options']['priority']) : 'normal';
                 $bPriority = isset($b['_options']['priority']) ? strtolower($b['_options']['priority']) : 'normal';
@@ -213,7 +212,7 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
             // Remove fetched events from session if clear is true
             if ($options['clear'] && !empty($result)) {
                 $remainingEvents = array();
-                $resultIds = array_map(function($event) {
+                $resultIds = array_map(function ($event) {
                     return isset($event['_metadata']['event_id']) ? $event['_metadata']['event_id'] : null;
                 }, $result);
                 
@@ -229,7 +228,6 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
             }
             
             return $result;
-            
         } catch (Exception $e) {
             Mage::logException($e);
             return array();
@@ -312,7 +310,6 @@ class Convertcart_Model_Analytics_Cc extends Mage_Core_Model_Session_Abstract
                     'search_query' => $request->getParam('q')
                 );
             }
-            
         } catch (Exception $e) {
             Mage::logException($e);
             

@@ -1,7 +1,7 @@
 <?php
 /**
  * ConvertCart Setup Observer
- * 
+ *
  * @category   Convertcart
  * @package    Convertcart_Analytics
  * @author     Convertcart
@@ -10,7 +10,7 @@ class Convertcart_Model_Observer_Setup
 {
     /**
      * Run post-installation setup
-     * 
+     *
      * @param Varien_Event_Observer $observer
      */
     public function runPostInstall($observer)
